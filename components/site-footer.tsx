@@ -53,7 +53,7 @@ export default function SiteFooter() {
             </p>
             <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
               <Link
-                href="#pesan"
+                href="/pesan"
                 className="inline-flex items-center gap-2 rounded-xl bg-accent px-7 py-3.5 text-base font-semibold text-accent-foreground shadow-lg transition-colors hover:bg-accent-hover"
               >
                 Pesan Sekarang

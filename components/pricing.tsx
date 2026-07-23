@@ -128,7 +128,7 @@ export default function Pricing() {
             </ul>
 
             <Link
-              href="#pesan"
+              href="/pesan"
               className={[
                 "mt-8 flex items-center justify-center rounded-xl px-5 py-3 text-sm font-semibold transition-colors",
                 t.featured

@@ -192,7 +192,7 @@ function MobileOverlay({ onClose }: { onClose: () => void }) {
 
         <motion.div variants={itemVariants} className="mt-4">
           <Link
-            href="#pesan"
+            href="/pesan"
             onClick={onClose}
             className="flex items-center justify-center rounded-lg bg-accent px-6 py-3.5 text-base font-semibold text-accent-foreground shadow-sm transition-colors hover:bg-accent-hover"
           >
@@ -300,7 +300,7 @@ export default function Navbar() {
           {/* Right side */}
           <div className="flex items-center gap-2">
             <Link
-              href="#pesan"
+              href="/pesan"
               className="hidden rounded-lg bg-accent px-5 py-2.5 text-sm font-semibold text-accent-foreground shadow-sm transition-colors hover:bg-accent-hover md:inline-flex"
             >
               Pesan Sekarang
