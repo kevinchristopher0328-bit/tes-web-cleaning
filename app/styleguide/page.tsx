@@ -194,8 +194,9 @@ export default function StyleGuide() {
           <p className="mt-4 max-w-2xl text-lg text-muted-foreground">
             Fondasi visual marketplace jasa rumah tangga. Arah warna{" "}
             <strong className="text-foreground">blue + white</strong> — biru
-            kustom yang tenang &amp; terpercaya, putih hangat, dengan aksen amber
-            untuk kehangatan. Semua token bersumber dari CSS variable.
+            primer yang cerah &amp; ramah namun tetap terpercaya (kontras teks
+            putih 4.86:1), putih hangat, dengan aksen amber untuk kehangatan.
+            Semua token bersumber dari CSS variable.
           </p>
         </div>
 
@@ -203,7 +204,7 @@ export default function StyleGuide() {
         <Section
           id="colors"
           title="Warna"
-          desc="Biru sengaja lebih dalam dari default agar terasa terpercaya. Neutral di-tint hangat supaya putihnya ramah, bukan abu-abu klinis. Amber dipakai hemat sebagai aksen."
+          desc="Primer memakai blue-500 yang cerah namun tetap lolos kontras teks putih. Neutral di-tint hangat supaya putihnya ramah, bukan abu-abu klinis. Amber dipakai hemat sebagai aksen."
         >
           <h3 className="mb-4 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
             Primer — Blue

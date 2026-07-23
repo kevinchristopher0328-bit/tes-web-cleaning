@@ -14,9 +14,9 @@ Stack: **Next.js 14 (App Router) + TypeScript + Tailwind CSS v3**.
   utilitas Tailwind — jangan hardcode nilai hex/px di komponen.
 - **Warna** disimpan sebagai channel HSL tanpa `hsl()` supaya modifier
   opacity Tailwind (mis. `bg-primary/50`) tetap berfungsi.
-- **Arah warna**: blue + white. Biru kustom yang lebih dalam/tenang dari
-  default Tailwind (terkesan terpercaya), neutral di-tint hangat, aksen amber
-  untuk CTA.
+- **Arah warna**: blue + white. Primer = `blue-500` (biru cerah & ramah, tetap
+  lolos kontras teks putih), neutral di-tint hangat, aksen amber untuk
+  highlight.
 - **Pakai token semantik** (`primary`, `muted`, `card`, `success`, …) di
   produk, bukan skala mentah (`blue-600`). Skala mentah hanya untuk kasus
   khusus / styleguide.

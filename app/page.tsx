@@ -17,7 +17,7 @@ export default function Home() {
 
         <p className="max-w-xl text-lg text-muted-foreground">
           Fondasi visual untuk marketplace jasa rumah tangga Indonesia —
-          warna hangat, tipografi jelas, token yang konsisten.
+          biru yang ramah, putih hangat, tipografi jelas, token yang konsisten.
         </p>
 
         <div className="flex flex-wrap items-center justify-center gap-3">

@@ -5,9 +5,10 @@ Design system untuk marketplace jasa rumah tangga Indonesia. Dibangun dengan
 
 ## Arah desain
 
-- **Warna: blue + white.** Biru kustom yang sengaja lebih dalam & tenang dari
-  palet default Tailwind agar terasa **terpercaya**, dipadu **putih hangat**
-  (neutral di-tint hangat) supaya tetap ramah, plus **aksen amber** untuk CTA.
+- **Warna: blue + white.** Primer memakai `blue-500` — biru cerah & ramah yang
+  tetap terasa **terpercaya** dan lolos kontras teks putih (4.86:1), dipadu
+  **putih hangat** (neutral di-tint hangat) supaya ramah, plus **aksen amber**
+  untuk highlight/promo.
 - **Tipografi:** `Plus Jakarta Sans` (display, didesain di Jakarta) + `Inter`
   (body). Skala modular ±1.2.
 - **Radius / shadow / spacing:** skala konsisten, shadow di-tint navy.

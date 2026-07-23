@@ -19,15 +19,15 @@
      --------------------------------------------------------------------------- */
   --blue-50: 214 100% 97%;
   --blue-100: 214 96% 93%;
-  --blue-200: 213 94% 86%;
-  --blue-300: 212 92% 76%;
-  --blue-400: 216 88% 66%;
-  --blue-500: 219 83% 57%;
-  --blue-600: 222 76% 49%; /* warna primer utama */
-  --blue-700: 224 71% 41%;
-  --blue-800: 226 63% 35%;
-  --blue-900: 227 54% 29%;
-  --blue-950: 230 52% 19%;
+  --blue-200: 215 95% 87%;
+  --blue-300: 216 93% 78%;
+  --blue-400: 218 89% 67%;
+  --blue-500: 220 84% 54%; /* warna primer utama — vibran, kontras putih 4.86:1 */
+  --blue-600: 222 80% 47%; /* hover primer */
+  --blue-700: 224 74% 40%;
+  --blue-800: 226 66% 33%;
+  --blue-900: 227 56% 28%;
+  --blue-950: 230 54% 18%;
 
   /* ---------------------------------------------------------------------------
      PALET — Skala Amber (aksen hangat untuk CTA & highlight).
@@ -75,8 +75,8 @@
   --muted: var(--neutral-100);
   --muted-foreground: var(--neutral-600);
 
-  --primary: var(--blue-600);
-  --primary-hover: var(--blue-700);
+  --primary: var(--blue-500);
+  --primary-hover: var(--blue-600);
   --primary-foreground: 0 0% 100%;
   --primary-subtle: var(--blue-50);
   --primary-subtle-foreground: var(--blue-700);
@@ -92,7 +92,7 @@
 
   --border: var(--neutral-200);
   --input: var(--neutral-300);
-  --ring: var(--blue-600);
+  --ring: var(--blue-500);
 
   /* Status */
   --success: 152 56% 38%;
@@ -187,9 +187,9 @@
   --muted: var(--neutral-800);
   --muted-foreground: var(--neutral-400);
 
-  --primary: var(--blue-500);
-  --primary-hover: var(--blue-400);
-  --primary-foreground: 224 40% 10%;
+  --primary: var(--blue-400);
+  --primary-hover: var(--blue-300);
+  --primary-foreground: 224 45% 11%;
   --primary-subtle: 224 45% 18%;
   --primary-subtle-foreground: var(--blue-200);
 
@@ -204,7 +204,7 @@
 
   --border: 222 18% 24%;
   --input: 222 16% 30%;
-  --ring: var(--blue-500);
+  --ring: var(--blue-400);
 
   --success-subtle: 152 40% 16%;
   --warning-subtle: 35 50% 18%;
