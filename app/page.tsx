@@ -1,5 +1,6 @@
 import Link from "next/link";
 import Navbar from "@/components/navbar";
+import Hero from "@/components/hero";
 import {
   HomeCleanIcon,
   IronIcon,
@@ -29,58 +30,7 @@ export default function Home() {
     <div className="min-h-screen bg-background">
       <Navbar />
 
-      {/* HERO */}
-      <section className="relative overflow-hidden bg-gradient-to-b from-blue-800 to-blue-950">
-        {/* glow dekoratif */}
-        <div className="pointer-events-none absolute -left-24 top-10 h-72 w-72 rounded-full bg-blue-500/30 blur-3xl" />
-        <div className="pointer-events-none absolute -right-16 bottom-0 h-72 w-72 rounded-full bg-accent/20 blur-3xl" />
-
-        <div className="relative mx-auto flex max-w-content flex-col items-center px-6 pb-24 pt-40 text-center">
-          <span className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-4 py-1.5 text-sm font-semibold text-white backdrop-blur">
-            <span className="h-2 w-2 rounded-full bg-accent" />
-            Mitra terverifikasi di 12 kota
-          </span>
-
-          <h1 className="mt-6 max-w-3xl text-5xl font-extrabold leading-tight text-white">
-            Rumah beres,{" "}
-            <span className="text-blue-200">hati tenang.</span>
-          </h1>
-
-          <p className="mt-5 max-w-xl text-lg text-blue-100/90">
-            Pesan jasa rumah tangga terpercaya — bersih-bersih, setrika, servis
-            AC — hanya dalam beberapa ketukan.
-          </p>
-
-          <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
-            <Link
-              href="#pesan"
-              className="inline-flex items-center gap-2 rounded-lg bg-accent px-6 py-3 text-base font-semibold text-accent-foreground shadow-lg transition-colors hover:bg-accent-hover"
-            >
-              Pesan Sekarang
-              <span aria-hidden>→</span>
-            </Link>
-            <Link
-              href="/styleguide"
-              className="inline-flex items-center gap-2 rounded-lg border border-white/25 bg-white/5 px-6 py-3 text-base font-semibold text-white backdrop-blur transition-colors hover:bg-white/10"
-            >
-              Lihat Styleguide
-            </Link>
-          </div>
-
-          <div className="mt-14 flex flex-wrap items-center justify-center gap-x-10 gap-y-4 text-white">
-            {[
-              ["4.9/5", "Rating rata-rata"],
-              ["25rb+", "Pesanan selesai"],
-              ["100%", "Uang kembali"],
-            ].map(([stat, label]) => (
-              <div key={label} className="text-center">
-                <div className="text-2xl font-extrabold">{stat}</div>
-                <div className="text-sm text-blue-100/80">{label}</div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
+      <Hero />
 
       {/* CARA KERJA */}
       <section id="cara-kerja" className="mx-auto max-w-content px-6 py-24">
