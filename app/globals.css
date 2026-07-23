@@ -152,6 +152,8 @@
   --shadow-xl: 0 24px 44px -10px hsl(var(--shadow-color) / 0.16),
     0 8px 18px -8px hsl(var(--shadow-color) / 0.1);
   --shadow-focus: 0 0 0 4px hsl(var(--ring) / 0.28);
+  /* Glow ter-tint warna primer — dipakai untuk state hover kartu. */
+  --shadow-glow: 0 18px 44px -14px hsl(var(--primary) / 0.45);
 
   /* ---------------------------------------------------------------------------
      SPACING — dasar 4px (0.25rem). Token bernama untuk dokumentasi.

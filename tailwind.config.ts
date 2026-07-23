@@ -13,7 +13,11 @@ const withAlpha = (variable: string) => `hsl(var(${variable}) / <alpha-value>)`;
 
 const config: Config = {
   darkMode: "class",
-  content: ["./app/**/*.{ts,tsx}", "./components/**/*.{ts,tsx}"],
+  content: [
+    "./app/**/*.{ts,tsx}",
+    "./components/**/*.{ts,tsx}",
+    "./src/**/*.{ts,tsx}",
+  ],
   // Styleguide membangun nama kelas skala warna secara dinamis
   // (mis. `bg-blue-${s}`), jadi JIT perlu di-safelist.
   safelist: [
@@ -160,6 +164,7 @@ const config: Config = {
         lg: "var(--shadow-lg)",
         xl: "var(--shadow-xl)",
         focus: "var(--shadow-focus)",
+        glow: "var(--shadow-glow)",
         none: "none",
       },
 

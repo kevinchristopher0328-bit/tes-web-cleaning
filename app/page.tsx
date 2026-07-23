@@ -1,23 +1,7 @@
 import Link from "next/link";
 import Navbar from "@/components/navbar";
 import Hero from "@/components/hero";
-import {
-  HomeCleanIcon,
-  IronIcon,
-  SofaIcon,
-  SprayIcon,
-  AcIcon,
-  LeafIcon,
-} from "@/components/service-icons";
-
-const services = [
-  { title: "Bersih Rumah", desc: "Sapu, pel, dan rapikan seluruh ruangan.", Icon: HomeCleanIcon },
-  { title: "Setrika", desc: "Kiloan dengan antar-jemput ke rumah.", Icon: IronIcon },
-  { title: "Cuci Sofa & Kasur", desc: "Bebas tungau dan noda membandel.", Icon: SofaIcon },
-  { title: "Dapur & Kamar Mandi", desc: "Deep cleaning area paling kotor.", Icon: SprayIcon },
-  { title: "Servis AC", desc: "Cuci unit dan isi ulang freon.", Icon: AcIcon },
-  { title: "Taman & Kebun", desc: "Rapikan rumput dan tanaman.", Icon: LeafIcon },
-];
+import ServicesSection from "@/components/services-section";
 
 const steps = [
   { n: "1", title: "Pilih layanan", desc: "Tentukan jenis jasa dan jadwal yang pas." },
@@ -61,34 +45,7 @@ export default function Home() {
       </section>
 
       {/* LAYANAN */}
-      <section id="layanan" className="bg-muted/50 py-24">
-        <div className="mx-auto max-w-content px-6">
-          <div className="mb-12 text-center">
-            <p className="text-sm font-semibold uppercase tracking-widest text-accent-subtle-foreground">
-              Layanan
-            </p>
-            <h2 className="mt-2 text-3xl font-bold text-foreground">
-              Semua kebutuhan rumah, satu aplikasi
-            </h2>
-          </div>
-          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {services.map((s) => (
-              <div
-                key={s.title}
-                className="group rounded-2xl border border-border bg-card p-6 shadow-sm transition-shadow hover:shadow-lg"
-              >
-                <span className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary-subtle text-primary transition-colors group-hover:bg-primary group-hover:text-primary-foreground">
-                  <s.Icon width={24} height={24} />
-                </span>
-                <h3 className="mt-4 text-lg font-bold text-card-foreground">
-                  {s.title}
-                </h3>
-                <p className="mt-1 text-sm text-muted-foreground">{s.desc}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
+      <ServicesSection />
 
       {/* HARGA */}
       <section id="harga" className="mx-auto max-w-content px-6 py-24">
