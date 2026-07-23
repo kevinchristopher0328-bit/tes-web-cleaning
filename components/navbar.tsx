@@ -258,19 +258,29 @@ export default function Navbar() {
 
           {/* Desktop nav */}
           <nav className="hidden items-center gap-1 md:flex">
-            {/* Layanan — mega menu */}
+            {/* Layanan — mega menu (hover + keyboard) */}
             <div
               className="relative"
               onMouseEnter={() => setMegaOpen(true)}
               onMouseLeave={() => setMegaOpen(false)}
+              onFocus={() => setMegaOpen(true)}
+              onBlur={(e) => {
+                if (!e.currentTarget.contains(e.relatedTarget as Node)) setMegaOpen(false);
+              }}
+              onKeyDown={(e) => {
+                if (e.key === "Escape") setMegaOpen(false);
+              }}
             >
               <button
+                type="button"
+                onClick={() => setMegaOpen((o) => !o)}
                 className={[
                   "flex items-center gap-1 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
                   onDark
                     ? "text-white/90 hover:bg-white/10 hover:text-white"
                     : "text-foreground/80 hover:bg-muted hover:text-foreground",
                 ].join(" ")}
+                aria-haspopup="menu"
                 aria-expanded={megaOpen}
               >
                 Layanan

@@ -4,6 +4,7 @@ import { useRef } from "react";
 import {
   motion,
   useInView,
+  useReducedMotion,
   useScroll,
   useTransform,
   type Variants,
@@ -43,7 +44,9 @@ const item: Variants = {
 
 export default function HowItWorks() {
   const sectionRef = useRef<HTMLElement>(null);
+  const reduce = useReducedMotion();
   const inView = useInView(sectionRef, { once: true, margin: "0px 0px -20% 0px" });
+  const show = reduce || inView;
 
   // Garis penghubung ter-draw progresif mengikuti scroll.
   const { scrollYProgress } = useScroll({
@@ -70,7 +73,7 @@ export default function HowItWorks() {
       <motion.div
         variants={container}
         initial="hidden"
-        animate={inView ? "show" : "hidden"}
+        animate={show ? "show" : "hidden"}
         className="relative"
       >
         {/* Garis horizontal (desktop) — draw progresif */}

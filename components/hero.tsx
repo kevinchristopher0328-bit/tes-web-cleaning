@@ -151,7 +151,7 @@ function SearchBar() {
         <span className="sr-only">Lokasi</span>
         <input
           type="text"
-          placeholder="Masukkan lokasi kamu"
+          placeholder="Masukkan lokasi"
           className="w-full bg-transparent text-sm outline-none placeholder:text-muted-foreground"
         />
       </label>
@@ -252,7 +252,7 @@ export default function Hero() {
             </span>
             <span className="text-white/30">·</span>
             <span className="inline-flex items-center gap-1">
-              <span className="text-success">✓</span> Mitra terverifikasi
+              <span aria-hidden>✓</span> Mitra terverifikasi
             </span>
           </motion.div>
         </motion.div>

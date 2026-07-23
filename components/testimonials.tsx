@@ -22,11 +22,12 @@ const testimonials: Testi[] = [
 function Card({ t }: { t: Testi }) {
   return (
     <figure className="flex w-80 shrink-0 flex-col rounded-2xl border border-border bg-card p-6 shadow-sm">
-      <div className="flex gap-0.5 text-accent">
+      <div className="flex gap-0.5 text-accent" aria-hidden>
         {Array.from({ length: 5 }).map((_, i) => (
           <Star key={i} size={16} fill="currentColor" strokeWidth={0} />
         ))}
       </div>
+      <span className="sr-only">Rating 5 dari 5</span>
       <blockquote className="mt-3 flex-1 text-sm leading-relaxed text-card-foreground">
         “{t.quote}”
       </blockquote>

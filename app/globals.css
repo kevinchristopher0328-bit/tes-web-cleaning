@@ -95,7 +95,7 @@
   --ring: var(--blue-500);
 
   /* Status */
-  --success: 152 56% 38%;
+  --success: 152 63% 30%; /* cukup gelap untuk teks kecil di latar terang (WCAG AA) */
   --success-foreground: 0 0% 100%;
   --success-subtle: 150 55% 94%;
   --warning: 38 92% 50%;
@@ -135,6 +135,7 @@
   --radius-lg: 0.875rem; /* 14 — radius dasar */
   --radius-xl: 1.25rem; /* 20 */
   --radius-2xl: 1.75rem; /* 28 */
+  --radius-3xl: 2rem; /* 32 */
   --radius-full: 9999px;
   --radius: var(--radius-lg);
 
@@ -208,6 +209,7 @@
   --input: 222 16% 30%;
   --ring: var(--blue-400);
 
+  --success: 150 55% 55%; /* lebih terang agar kontras di latar gelap */
   --success-subtle: 152 40% 16%;
   --warning-subtle: 35 50% 18%;
   --danger-subtle: 356 45% 20%;
@@ -253,5 +255,24 @@
     outline: none;
     box-shadow: var(--shadow-focus);
     border-radius: var(--radius-sm);
+  }
+}
+
+/* =============================================================================
+   REDUCED MOTION — hormati preferensi pengguna.
+   Framer Motion ditangani global via <MotionConfig reducedMotion="user">;
+   di sini kita matikan smooth-scroll, marquee, dan transisi/animasi CSS.
+   ============================================================================= */
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
   }
 }

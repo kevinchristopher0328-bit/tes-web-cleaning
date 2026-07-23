@@ -2,7 +2,7 @@
 
 import { useRef } from "react";
 import Link from "next/link";
-import { motion, useInView, type Variants } from "framer-motion";
+import { motion, useInView, useReducedMotion, type Variants } from "framer-motion";
 import { services } from "@/src/data/services";
 
 const container: Variants = {
@@ -23,8 +23,10 @@ const card: Variants = {
 
 export default function ServicesSection() {
   const ref = useRef<HTMLDivElement>(null);
+  const reduce = useReducedMotion();
   // Munculkan sekali saat 20% section masuk viewport.
   const inView = useInView(ref, { once: true, margin: "0px 0px -15% 0px" });
+  const show = reduce || inView; // reduced-motion: tampil langsung tanpa scroll
 
   return (
     <section id="layanan" className="bg-muted/40 py-24">
@@ -46,7 +48,7 @@ export default function ServicesSection() {
           ref={ref}
           variants={container}
           initial="hidden"
-          animate={inView ? "show" : "hidden"}
+          animate={show ? "show" : "hidden"}
           className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3"
         >
           {services.map((s) => {

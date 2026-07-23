@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef, useState } from "react";
-import { AnimatePresence, motion, useInView } from "framer-motion";
+import { AnimatePresence, motion, useInView, useReducedMotion } from "framer-motion";
 import { Plus } from "lucide-react";
 
 const faqs = [
@@ -30,7 +30,9 @@ const faqs = [
 export default function Faq() {
   const [open, setOpen] = useState<number | null>(0);
   const ref = useRef<HTMLDivElement>(null);
+  const reduce = useReducedMotion();
   const inView = useInView(ref, { once: true, margin: "0px 0px -15% 0px" });
+  const show = reduce || inView;
 
   return (
     <section id="faq" className="mx-auto max-w-3xl px-6 py-24">
@@ -46,7 +48,7 @@ export default function Faq() {
       <motion.div
         ref={ref}
         initial={{ opacity: 0, y: 20 }}
-        animate={inView ? { opacity: 1, y: 0 } : {}}
+        animate={show ? { opacity: 1, y: 0 } : {}}
         transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
         className="divide-y divide-border overflow-hidden rounded-2xl border border-border bg-card"
       >

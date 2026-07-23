@@ -2,7 +2,7 @@
 
 import { useRef } from "react";
 import Link from "next/link";
-import { motion, useInView, type Variants } from "framer-motion";
+import { motion, useInView, useReducedMotion, type Variants } from "framer-motion";
 import { Check } from "lucide-react";
 
 type Tier = {
@@ -59,7 +59,9 @@ const item: Variants = {
 
 export default function Pricing() {
   const ref = useRef<HTMLDivElement>(null);
+  const reduce = useReducedMotion();
   const inView = useInView(ref, { once: true, margin: "0px 0px -15% 0px" });
+  const show = reduce || inView;
 
   return (
     <section id="harga" className="mx-auto max-w-content px-6 py-24">
@@ -79,7 +81,7 @@ export default function Pricing() {
         ref={ref}
         variants={container}
         initial="hidden"
-        animate={inView ? "show" : "hidden"}
+        animate={show ? "show" : "hidden"}
         className="grid grid-cols-1 items-center gap-6 md:grid-cols-3"
       >
         {tiers.map((t) => (
