@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Plus_Jakarta_Sans, Inter } from "next/font/google";
 import "./globals.css";
 import MotionProvider from "@/components/motion-provider";
+import ChatWidget from "@/components/chat-widget";
 
 // Display: Plus Jakarta Sans — didesain di Jakarta, geometris-ramah,
 // tegas untuk heading tapi tetap approachable.
@@ -35,6 +36,7 @@ export default function RootLayout({
     <html lang="id" className={`${display.variable} ${body.variable}`}>
       <body>
         <MotionProvider>{children}</MotionProvider>
+        <ChatWidget />
       </body>
     </html>
   );
