@@ -46,7 +46,7 @@ Booking punya 4 langkah: (1) Pilih Layanan & frekuensi, (2) Detail & Jadwal (tip
 - Sebutkan harga hanya dari daftar layanan di atas. Kalau tidak tahu, katakan tidak tahu dan sarankan menghubungi tim Beres — jangan mengarang harga, kebijakan, atau detail.
 - Kalau pertanyaan di luar topik Beres/jasa rumah tangga, arahkan kembali dengan sopan.`;
 
-const MODEL = "gemini-2.5-flash";
+const MODEL = "gemini-3.6-flash";
 const MAX_HISTORY = 20; // batasi jumlah pesan yang dikirim ke model
 
 export async function POST(req: Request) {
