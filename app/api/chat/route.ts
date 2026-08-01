@@ -1,14 +1,15 @@
-import Anthropic from "@anthropic-ai/sdk";
+import { GoogleGenAI } from "@google/genai";
 import { services } from "@/src/data/services";
 
 /**
  * Backend AI agent "Bantu" (asisten Beres).
  *
- * Streaming chat endpoint yang memanggil Claude. Knowledge tentang layanan
- * dibangun dari sumber tunggal `src/data/services.ts`, jadi begitu daftar
- * layanan berubah, jawaban asisten ikut menyesuaikan tanpa edit manual.
+ * Streaming chat endpoint yang memanggil Google Gemini (free tier).
+ * Knowledge tentang layanan dibangun dari sumber tunggal
+ * `src/data/services.ts`, jadi begitu daftar layanan berubah, jawaban
+ * asisten ikut menyesuaikan tanpa edit manual.
  *
- * Butuh env var `ANTHROPIC_API_KEY`.
+ * Butuh env var `GEMINI_API_KEY`.
  */
 
 export const runtime = "nodejs";
@@ -45,13 +46,13 @@ Booking punya 4 langkah: (1) Pilih Layanan & frekuensi, (2) Detail & Jadwal (tip
 - Sebutkan harga hanya dari daftar layanan di atas. Kalau tidak tahu, katakan tidak tahu dan sarankan menghubungi tim Beres — jangan mengarang harga, kebijakan, atau detail.
 - Kalau pertanyaan di luar topik Beres/jasa rumah tangga, arahkan kembali dengan sopan.`;
 
-const MODEL = "claude-opus-5";
+const MODEL = "gemini-2.5-flash";
 const MAX_HISTORY = 20; // batasi jumlah pesan yang dikirim ke model
 
 export async function POST(req: Request) {
-  if (!process.env.ANTHROPIC_API_KEY) {
+  if (!process.env.GEMINI_API_KEY) {
     return Response.json(
-      { error: "Asisten belum dikonfigurasi. Set ANTHROPIC_API_KEY di server." },
+      { error: "Asisten belum dikonfigurasi. Set GEMINI_API_KEY di server." },
       { status: 503 },
     );
   }
@@ -68,33 +69,30 @@ export async function POST(req: Request) {
     return Response.json({ error: "Tidak ada pesan." }, { status: 400 });
   }
 
-  const client = new Anthropic();
+  const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+
+  // Gemini memakai role "model" untuk balasan asisten.
+  const contents = messages.map((m) => ({
+    role: m.role === "assistant" ? "model" : "user",
+    parts: [{ text: m.content }],
+  }));
 
   const encoder = new TextEncoder();
   const stream = new ReadableStream<Uint8Array>({
     async start(controller) {
       try {
-        const claudeStream = client.messages.stream({
+        const geminiStream = await ai.models.generateContentStream({
           model: MODEL,
-          max_tokens: 4096,
-          output_config: { effort: "low" }, // respons cepat untuk widget chat
-          system: [
-            { type: "text", text: SYSTEM_PROMPT, cache_control: { type: "ephemeral" } },
-          ],
-          messages,
+          contents,
+          config: {
+            systemInstruction: SYSTEM_PROMPT,
+            maxOutputTokens: 4096,
+          },
         });
 
-        claudeStream.on("text", (delta) => {
-          controller.enqueue(encoder.encode(delta));
-        });
-
-        const final = await claudeStream.finalMessage();
-        if (final.stop_reason === "refusal") {
-          controller.enqueue(
-            encoder.encode(
-              "Maaf, aku tidak bisa membantu permintaan itu. Ada yang lain seputar layanan Beres?",
-            ),
-          );
+        for await (const chunk of geminiStream) {
+          const text = chunk.text;
+          if (text) controller.enqueue(encoder.encode(text));
         }
         controller.close();
       } catch (err) {
