@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import Link from "next/link";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { MessageCircle, X, Send, Sparkles, Plus } from "lucide-react";
 
@@ -240,15 +239,24 @@ function Bubble({
   );
 }
 
+/** Ambil slug dari path tag, mis. "/pesan?service=servis-ac" -> "servis-ac". */
+function slugFromPath(path: string): string | null {
+  const m = path.match(/service=([^&\s]+)/);
+  return m ? decodeURIComponent(m[1]) : null;
+}
+
 /**
- * Ubah teks balasan bot jadi ReactNode: teks biasa + kartu layanan untuk tiap
- * tag [SERVICE:...] dan tombol tambahan untuk tag [SEKALIAN]. Tag mentahnya
+ * Ubah teks balasan bot jadi ReactNode: teks biasa + kartu info untuk tiap
+ * tag [SERVICE:...] (tanpa tombol), lalu SATU tombol "Pesan Sekarang" untuk
+ * memesan semua layanan sekaligus, diikuti tombol [SEKALIAN]. Tag mentahnya
  * dihapus dari tampilan.
  */
 function renderAssistantContent(content: string): React.ReactNode {
   const nodes: React.ReactNode[] = [];
+  const slugs: string[] = [];
   let lastIndex = 0;
   let key = 0;
+  let bookingRendered = false;
   let match: RegExpExecArray | null;
 
   const pushText = (text: string) => {
@@ -256,26 +264,30 @@ function renderAssistantContent(content: string): React.ReactNode {
     if (t.length > 0) nodes.push(<span key={key++}>{t}</span>);
   };
 
+  // Satu tombol pesan untuk SEMUA layanan yang direkomendasikan di pesan ini.
+  const renderBooking = () => {
+    if (bookingRendered || slugs.length === 0) return;
+    bookingRendered = true;
+    nodes.push(<BookingButton key={key++} slugs={[...slugs]} />);
+  };
+
   CHAT_TAG.lastIndex = 0;
   while ((match = CHAT_TAG.exec(content)) !== null) {
     pushText(content.slice(lastIndex, match.index));
 
     if (match[1] !== undefined) {
-      // [SERVICE:nama|deskripsi|harga|path]
+      // [SERVICE:nama|deskripsi|harga|path] — kartu info saja (tanpa tombol)
       const [nama = "", deskripsi = "", harga = "", path = ""] = match[1]
         .split("|")
         .map((s) => s.trim());
+      const slug = slugFromPath(path);
+      if (slug) slugs.push(slug);
       nodes.push(
-        <ServiceCard
-          key={key++}
-          nama={nama}
-          deskripsi={deskripsi}
-          harga={harga}
-          path={path || "/pesan"}
-        />,
+        <ServiceCard key={key++} nama={nama} deskripsi={deskripsi} harga={harga} />,
       );
     } else {
-      // [SEKALIAN]
+      // [SEKALIAN] — tombol pesan gabungan dulu, lalu tombol tambah layanan
+      renderBooking();
       nodes.push(<SekalianButton key={key++} />);
     }
 
@@ -283,6 +295,7 @@ function renderAssistantContent(content: string): React.ReactNode {
   }
 
   pushText(content.slice(lastIndex));
+  renderBooking(); // jaga-jaga bila tidak ada tag [SEKALIAN]
   return nodes;
 }
 
@@ -290,15 +303,13 @@ function ServiceCard({
   nama,
   deskripsi,
   harga,
-  path,
 }: {
   nama: string;
   deskripsi: string;
   harga: string;
-  path: string;
 }) {
   return (
-    <div className="mt-2 flex flex-col gap-2 rounded-2xl border border-border bg-card p-4 shadow-sm">
+    <div className="mt-2 flex flex-col gap-1.5 rounded-2xl border border-border bg-card p-4 shadow-sm">
       <div className="text-sm font-bold text-card-foreground">{nama}</div>
       {deskripsi && (
         <div className="text-xs leading-relaxed text-muted-foreground">{deskripsi}</div>
@@ -306,26 +317,35 @@ function ServiceCard({
       {harga && (
         <div className="text-base font-extrabold text-accent-subtle-foreground">{harga}</div>
       )}
-      <Link
-        href={path}
-        className="mt-1 flex w-full items-center justify-center gap-1.5 rounded-full bg-primary px-4 py-2.5 text-xs font-bold text-primary-foreground shadow-sm transition-colors hover:bg-primary-hover focus:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
-      >
-        <Sparkles size={14} />
-        Pesan Sekarang
-      </Link>
     </div>
+  );
+}
+
+/** Satu tombol untuk memesan semua layanan: /pesan?service=a&service=b */
+function BookingButton({ slugs }: { slugs: string[] }) {
+  const params = new URLSearchParams();
+  slugs.forEach((s) => params.append("service", s));
+  const href = `/pesan?${params.toString()}`;
+  return (
+    <a
+      href={href}
+      className="mt-3 flex w-full items-center justify-center gap-1.5 rounded-full bg-primary px-4 py-2.5 text-xs font-bold text-primary-foreground shadow-sm transition-colors hover:bg-primary-hover focus:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
+    >
+      <Sparkles size={14} />
+      Pesan Sekarang
+    </a>
   );
 }
 
 function SekalianButton() {
   return (
-    <Link
+    <a
       href="/pesan"
       className="mt-2 flex w-full items-center justify-center gap-1.5 rounded-full border border-primary/40 bg-transparent px-4 py-2.5 text-xs font-bold text-primary transition-colors hover:bg-primary-subtle focus:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
     >
       <Plus size={14} />
       Sekalian, tambah layanan lain
-    </Link>
+    </a>
   );
 }
 

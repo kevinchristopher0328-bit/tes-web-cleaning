@@ -432,14 +432,19 @@ function Progress({ step }: { step: number }) {
 /* -------------------------------------------------------------------------- */
 
 export default function BookingForm() {
-  // Layanan bisa diprapilih lewat query param, mis. /pesan?service=servis-ac
-  // (dipakai tombol "Pesan Sekarang" di chat). Kalau valid, layanan langsung
-  // terpilih dan alur loncat ke step 2 (Detail & Jadwal).
+  // Layanan bisa diprapilih lewat query param, mis.
+  // /pesan?service=servis-ac&service=cuci-sofa (dipakai tombol "Pesan Sekarang"
+  // di chat). Kalau ada yang valid, layanan langsung terpilih dan alur loncat
+  // ke step 2 (Detail & Jadwal).
+  //
+  // Catatan: form ini masih satu layanan per pesanan, jadi bila beberapa slug
+  // dikirim kita memilih yang pertama valid.
   const searchParams = useSearchParams();
-  const requested = searchParams.get("service");
-  const presetService = (SERVICE_SLUGS as readonly string[]).includes(requested ?? "")
-    ? (requested as BookingData["service"])
-    : undefined;
+  const requested = searchParams.getAll("service");
+  const validServices = requested.filter((s): s is BookingData["service"] =>
+    (SERVICE_SLUGS as readonly string[]).includes(s),
+  );
+  const presetService = validServices[0];
 
   const methods = useForm<BookingData>({
     resolver: zodResolver(bookingSchema),
