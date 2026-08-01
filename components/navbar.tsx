@@ -5,7 +5,6 @@ import Link from "next/link";
 import { AnimatePresence, motion, type Variants } from "framer-motion";
 import {
   HomeCleanIcon,
-  IronIcon,
   SofaIcon,
   SprayIcon,
   AcIcon,
@@ -18,7 +17,6 @@ import {
 
 const services = [
   { title: "Bersih Rumah", desc: "Sapu, pel, rapikan", href: "#", Icon: HomeCleanIcon },
-  { title: "Setrika", desc: "Kiloan, antar-jemput", href: "#", Icon: IronIcon },
   { title: "Cuci Sofa & Kasur", desc: "Bebas tungau", href: "#", Icon: SofaIcon },
   { title: "Dapur & Kamar Mandi", desc: "Deep cleaning", href: "#", Icon: SprayIcon },
   { title: "Servis AC", desc: "Cuci & isi freon", href: "#", Icon: AcIcon },

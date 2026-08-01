@@ -1,7 +1,6 @@
 import {
   AirVent,
   Leaf,
-  Shirt,
   Sofa,
   Sparkles,
   SprayCan,
@@ -30,14 +29,6 @@ export const services: Service[] = [
     priceFrom: "Rp 90.000",
     icon: Sparkles,
     href: "/layanan/bersih-rumah",
-  },
-  {
-    slug: "setrika",
-    name: "Setrika",
-    description: "Kiloan rapi dengan antar-jemput.",
-    priceFrom: "Rp 8.000/kg",
-    icon: Shirt,
-    href: "/layanan/setrika",
   },
   {
     slug: "cuci-sofa",

@@ -11,7 +11,6 @@ import {
 } from "framer-motion";
 import {
   HomeCleanIcon,
-  IronIcon,
   SofaIcon,
   AcIcon,
 } from "./service-icons";
@@ -73,7 +72,6 @@ function StarIcon() {
 const cards = [
   { title: "Bersih Rumah", meta: "mulai Rp 90rb", Icon: HomeCleanIcon, tone: "lg:-rotate-2" },
   { title: "Servis AC", meta: "★ 4.9 · 2rb ulasan", Icon: AcIcon, tone: "lg:rotate-1" },
-  { title: "Setrika Kiloan", meta: "Rp 8rb / kg", Icon: IronIcon, tone: "lg:-rotate-1" },
   { title: "Cuci Sofa", meta: "bebas tungau", Icon: SofaIcon, tone: "lg:rotate-2" },
 ];
 
@@ -130,7 +128,6 @@ function FloatingCards() {
 
 const serviceOptions = [
   "Bersih Rumah",
-  "Setrika",
   "Cuci Sofa & Kasur",
   "Dapur & Kamar Mandi",
   "Servis AC",
@@ -228,7 +225,7 @@ export default function Hero() {
             variants={fadeUp}
             className="mt-5 max-w-lg text-base text-blue-100/90 sm:text-lg"
           >
-            Pesan mitra terverifikasi untuk bersih-bersih, setrika, servis AC,
+            Pesan mitra terverifikasi untuk bersih-bersih, servis AC,
             dan lainnya. Cukup pilih lokasi dan layanan — sisanya kami yang urus.
           </motion.p>
 
