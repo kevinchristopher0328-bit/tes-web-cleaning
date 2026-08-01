@@ -16,7 +16,7 @@ const testimonials: Testi[] = [
   { name: "Maya R.", role: "Surabaya", initial: "M", tone: "bg-success text-success-foreground", quote: "Langganan mingguan bikin hidup lebih santai. Mitra tetap jadi udah hafal maunya." },
   { name: "Andi K.", role: "Tangerang", initial: "A", tone: "bg-info text-info-foreground", quote: "Cuci sofa hasilnya di luar ekspektasi. Noda lama hilang, bau apak juga hilang." },
   { name: "Dewi L.", role: "Depok", initial: "D", tone: "bg-primary text-primary-foreground", quote: "Aplikasinya intuitif, mitranya ramah dan profesional. Recommended banget!" },
-  { name: "Rizal F.", role: "Bekasi", initial: "R", tone: "bg-accent text-accent-foreground", quote: "Setrika kiloan antar-jemput, hemat waktu buat yang sibuk kerja seperti saya." },
+  { name: "Rizal F.", role: "Bekasi", initial: "R", tone: "bg-accent text-accent-foreground", quote: "Servis AC cepat dan rapi, hemat waktu buat yang sibuk kerja seperti saya." },
 ];
 
 function Card({ t }: { t: Testi }) {

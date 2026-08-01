@@ -439,7 +439,7 @@ export default function StyleGuide() {
           <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {[
               { title: "Bersih Rumah", price: "Rp 90.000", rating: "4.9", tag: "Terlaris" },
-              { title: "Setrika Kiloan", price: "Rp 8.000/kg", rating: "4.8", tag: "Hemat" },
+              { title: "Servis AC", price: "Rp 75.000", rating: "4.8", tag: "Hemat" },
               { title: "Cuci Sofa", price: "Rp 150.000", rating: "5.0", tag: "Pro" },
             ].map((s) => (
               <article

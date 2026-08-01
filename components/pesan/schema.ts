@@ -6,7 +6,6 @@ import { z } from "zod";
 
 export const SERVICE_SLUGS = [
   "bersih-rumah",
-  "setrika",
   "cuci-sofa",
   "dapur-kamar-mandi",
   "servis-ac",
@@ -100,7 +99,6 @@ export const STEP_LABELS = [
 
 const BASE_PRICE: Record<(typeof SERVICE_SLUGS)[number], number> = {
   "bersih-rumah": 90000,
-  setrika: 60000,
   "cuci-sofa": 150000,
   "dapur-kamar-mandi": 120000,
   "servis-ac": 75000,
