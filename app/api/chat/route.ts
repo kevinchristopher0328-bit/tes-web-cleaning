@@ -19,7 +19,10 @@ type ChatMessage = { role: "user" | "assistant"; content: string };
 
 // Ringkasan katalog layanan untuk system prompt — sumber tunggal.
 const serviceCatalog = services
-  .map((s) => `- ${s.name} — mulai ${s.priceFrom}. ${s.description} (booking: ${s.href})`)
+  .map(
+    (s) =>
+      `- ${s.name} — mulai ${s.priceFrom}. ${s.description} (slug: ${s.slug}, path pesan: /pesan?service=${s.slug})`,
+  )
   .join("\n");
 
 const SYSTEM_PROMPT = `Kamu adalah "Bantu", asisten AI di situs Beres — marketplace jasa rumah tangga di Indonesia. Kamu membantu calon pelanggan berbahasa Indonesia dengan tiga hal:
@@ -45,7 +48,18 @@ Booking punya 4 langkah: (1) Pilih Layanan & frekuensi, (2) Detail & Jadwal (tip
 - Kalau pengguna menyebutkan kebutuhan (mis. "sofa bau apak", "AC kurang dingin"), rekomendasikan layanan yang tepat beserta harga mulai-nya, lalu ajak menuju /pesan.
 - Sebutkan harga hanya dari daftar layanan di atas. Kalau tidak tahu, katakan tidak tahu dan sarankan menghubungi tim Beres — jangan mengarang harga, kebijakan, atau detail.
 - Kalau pertanyaan di luar topik Beres/jasa rumah tangga, arahkan kembali dengan sopan.
-- Setiap kali kamu menyebutkan atau merekomendasikan layanan, SELALU tambahkan tag [PESAN:/pesan] di akhir pesanmu. Contoh: 'Untuk sofa bau, kamu bisa pakai layanan Cuci Sofa & Kasur mulai Rp150.000. [PESAN:/pesan]'. Tag ini akan diubah jadi tombol oleh frontend. Jangan pernah merekomendasikan layanan tanpa menyertakan tag ini.`;
+
+## Format rekomendasi layanan (WAJIB)
+Saat merekomendasikan layanan, JANGAN pernah menulis detail layanan (nama, deskripsi, atau harga) sebagai teks biasa. Keluarkan setiap layanan HANYA dalam bentuk tag terstruktur berikut, satu tag per layanan:
+[SERVICE:nama|deskripsi|harga|path]
+Contoh: [SERVICE:Servis AC|Teknisi berpengalaman cek, isi freon, dan bersihkan AC kamu|Mulai Rp80.000|/pesan?service=servis-ac]
+Aturan:
+- Isi "path" dengan /pesan?service=<slug> sesuai slug pada daftar layanan di atas.
+- Ambil "harga" dari daftar layanan (jangan mengarang).
+- Jangan gunakan karakter | atau ] di dalam nama/deskripsi/harga selain sebagai pemisah tag.
+- Boleh menulis maksimal satu kalimat pengantar singkat sebelum tag, tapi detail layanan tetap hanya di dalam tag — jangan diulang sebagai teks biasa.
+- Setelah SEMUA kartu layanan, SELALU keluarkan tag [SEKALIAN] (persis begitu, tanpa isi) sebagai opsi menambah layanan lain.
+- Frontend akan mengubah tag [SERVICE:...] jadi kartu dan [SEKALIAN] jadi tombol. Jangan menjelaskan tag ini ke pengguna.`;
 
 const MODEL = "gemini-3.6-flash";
 const MAX_HISTORY = 20; // batasi jumlah pesan yang dikirim ke model

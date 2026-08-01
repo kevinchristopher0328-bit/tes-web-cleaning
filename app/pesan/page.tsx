@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import type { Metadata } from "next";
 import BookingForm from "@/components/pesan/booking-form";
 
@@ -7,5 +8,10 @@ export const metadata: Metadata = {
 };
 
 export default function PesanPage() {
-  return <BookingForm />;
+  // Suspense diperlukan karena BookingForm memakai useSearchParams.
+  return (
+    <Suspense>
+      <BookingForm />
+    </Suspense>
+  );
 }

@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import {
   FormProvider,
   useForm,
@@ -18,6 +19,7 @@ import {
   formatRupiah,
   stepFields,
   STEP_LABELS,
+  SERVICE_SLUGS,
   FREQUENCIES,
   PROPERTY_TYPES,
   DURATIONS,
@@ -430,11 +432,24 @@ function Progress({ step }: { step: number }) {
 /* -------------------------------------------------------------------------- */
 
 export default function BookingForm() {
+  // Layanan bisa diprapilih lewat query param, mis. /pesan?service=servis-ac
+  // (dipakai tombol "Pesan Sekarang" di chat). Kalau valid, layanan langsung
+  // terpilih dan alur loncat ke step 2 (Detail & Jadwal).
+  const searchParams = useSearchParams();
+  const requested = searchParams.get("service");
+  const presetService = (SERVICE_SLUGS as readonly string[]).includes(requested ?? "")
+    ? (requested as BookingData["service"])
+    : undefined;
+
   const methods = useForm<BookingData>({
     resolver: zodResolver(bookingSchema),
     mode: "onTouched",
     // Nilai form disimpan di sini (react-hook-form context) — tidak hilang saat mundur.
     defaultValues: {
+      service: presetService,
+      // Beri frekuensi default agar form tetap valid saat step 1 dilewati;
+      // pengguna masih bisa mengubahnya lewat tombol "Kembali".
+      frequency: presetService ? "sekali" : undefined,
       date: "",
       notes: "",
       fullName: "",
@@ -447,7 +462,7 @@ export default function BookingForm() {
     },
   });
 
-  const [step, setStep] = useState(0);
+  const [step, setStep] = useState(presetService ? 1 : 0);
   const [dir, setDir] = useState(1);
   const [done, setDone] = useState(false);
 

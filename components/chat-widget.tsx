@@ -3,11 +3,13 @@
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
-import { MessageCircle, X, Send, Sparkles } from "lucide-react";
+import { MessageCircle, X, Send, Sparkles, Plus } from "lucide-react";
 
-// Tag [PESAN:/path] yang disisipkan bot saat merekomendasikan layanan —
-// frontend mengubahnya jadi tombol "Pesan Sekarang".
-const PESAN_TAG = /\[PESAN:([^\]]+)\]/g;
+// Tag terstruktur yang disisipkan bot saat merekomendasikan layanan:
+//   [SERVICE:nama|deskripsi|harga|path]  -> kartu layanan
+//   [SEKALIAN]                           -> tombol tambah layanan lain
+// Frontend mengubahnya jadi UI; tag mentah tidak pernah ditampilkan.
+const CHAT_TAG = /\[SERVICE:([^\]]+)\]|\[SEKALIAN\]/g;
 
 /* -------------------------------------------------------------------------- */
 /*  Asisten AI "Bantu" — widget chat mengambang.                              */
@@ -239,8 +241,9 @@ function Bubble({
 }
 
 /**
- * Ubah teks balasan bot jadi ReactNode: teks biasa + tombol "Pesan Sekarang"
- * untuk setiap tag [PESAN:/pesan]. Tag mentahnya dihapus dari tampilan.
+ * Ubah teks balasan bot jadi ReactNode: teks biasa + kartu layanan untuk tiap
+ * tag [SERVICE:...] dan tombol tambahan untuk tag [SEKALIAN]. Tag mentahnya
+ * dihapus dari tampilan.
  */
 function renderAssistantContent(content: string): React.ReactNode {
   const nodes: React.ReactNode[] = [];
@@ -248,30 +251,82 @@ function renderAssistantContent(content: string): React.ReactNode {
   let key = 0;
   let match: RegExpExecArray | null;
 
-  PESAN_TAG.lastIndex = 0;
-  while ((match = PESAN_TAG.exec(content)) !== null) {
-    const href = match[1];
-    if (match.index > lastIndex) {
-      nodes.push(<span key={key++}>{content.slice(lastIndex, match.index)}</span>);
+  const pushText = (text: string) => {
+    const t = text.trim();
+    if (t.length > 0) nodes.push(<span key={key++}>{t}</span>);
+  };
+
+  CHAT_TAG.lastIndex = 0;
+  while ((match = CHAT_TAG.exec(content)) !== null) {
+    pushText(content.slice(lastIndex, match.index));
+
+    if (match[1] !== undefined) {
+      // [SERVICE:nama|deskripsi|harga|path]
+      const [nama = "", deskripsi = "", harga = "", path = ""] = match[1]
+        .split("|")
+        .map((s) => s.trim());
+      nodes.push(
+        <ServiceCard
+          key={key++}
+          nama={nama}
+          deskripsi={deskripsi}
+          harga={harga}
+          path={path || "/pesan"}
+        />,
+      );
+    } else {
+      // [SEKALIAN]
+      nodes.push(<SekalianButton key={key++} />);
     }
-    nodes.push(
-      <Link
-        key={key++}
-        href={href}
-        className="mt-2 flex w-fit items-center gap-1.5 rounded-full bg-primary px-4 py-2 text-xs font-bold text-primary-foreground shadow-sm transition-colors hover:bg-primary-hover focus:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
-      >
-        <Sparkles size={14} />
-        Pesan Sekarang
-      </Link>,
-    );
+
     lastIndex = match.index + match[0].length;
   }
 
-  if (lastIndex < content.length) {
-    nodes.push(<span key={key++}>{content.slice(lastIndex)}</span>);
-  }
-
+  pushText(content.slice(lastIndex));
   return nodes;
+}
+
+function ServiceCard({
+  nama,
+  deskripsi,
+  harga,
+  path,
+}: {
+  nama: string;
+  deskripsi: string;
+  harga: string;
+  path: string;
+}) {
+  return (
+    <div className="mt-2 flex flex-col gap-2 rounded-2xl border border-border bg-card p-4 shadow-sm">
+      <div className="text-sm font-bold text-card-foreground">{nama}</div>
+      {deskripsi && (
+        <div className="text-xs leading-relaxed text-muted-foreground">{deskripsi}</div>
+      )}
+      {harga && (
+        <div className="text-base font-extrabold text-accent-subtle-foreground">{harga}</div>
+      )}
+      <Link
+        href={path}
+        className="mt-1 flex w-full items-center justify-center gap-1.5 rounded-full bg-primary px-4 py-2.5 text-xs font-bold text-primary-foreground shadow-sm transition-colors hover:bg-primary-hover focus:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
+      >
+        <Sparkles size={14} />
+        Pesan Sekarang
+      </Link>
+    </div>
+  );
+}
+
+function SekalianButton() {
+  return (
+    <Link
+      href="/pesan"
+      className="mt-2 flex w-full items-center justify-center gap-1.5 rounded-full border border-primary/40 bg-transparent px-4 py-2.5 text-xs font-bold text-primary transition-colors hover:bg-primary-subtle focus:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
+    >
+      <Plus size={14} />
+      Sekalian, tambah layanan lain
+    </Link>
+  );
 }
 
 function TypingDots() {
