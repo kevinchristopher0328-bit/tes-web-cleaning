@@ -3,12 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import {
-  FormProvider,
-  useForm,
-  useFormContext,
-  type FieldPath,
-} from "react-hook-form";
+import { FormProvider, useForm, useFormContext } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { AnimatePresence, motion } from "framer-motion";
 import { ArrowLeft, ArrowRight, Check, CheckCircle2 } from "lucide-react";
@@ -33,7 +28,7 @@ const TOTAL = STEP_LABELS.length;
 /*  Primitives                                                                 */
 /* -------------------------------------------------------------------------- */
 
-function ErrorMsg({ name }: { name: FieldPath<BookingData> }) {
+function ErrorMsg({ name }: { name: keyof BookingData }) {
   const {
     formState: { errors },
   } = useFormContext<BookingData>();
@@ -49,7 +44,7 @@ function Field({
   hint,
 }: {
   label: string;
-  name: FieldPath<BookingData>;
+  name: keyof BookingData;
   children: React.ReactNode;
   hint?: string;
 }) {
@@ -105,26 +100,32 @@ function SelectCard({
 
 function StepService() {
   const { watch, setValue } = useFormContext<BookingData>();
-  const service = watch("service");
+  const selected = watch("services") ?? [];
   const frequency = watch("frequency");
+
+  const toggleService = (slug: BookingData["services"][number]) => {
+    const next = selected.includes(slug)
+      ? selected.filter((s) => s !== slug)
+      : [...selected, slug];
+    setValue("services", next, { shouldValidate: true, shouldTouch: true });
+  };
 
   return (
     <div className="space-y-8">
       <div>
-        <h3 className="mb-1 text-sm font-medium text-foreground">Mau pesan layanan apa?</h3>
+        <h3 className="mb-1 text-sm font-medium text-foreground">
+          Mau pesan layanan apa?{" "}
+          <span className="font-normal text-muted-foreground">(bisa pilih lebih dari satu)</span>
+        </h3>
         <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
           {services.map((s) => {
             const Icon = s.icon;
+            const slug = s.slug as BookingData["services"][number];
             return (
               <SelectCard
                 key={s.slug}
-                active={service === s.slug}
-                onClick={() =>
-                  setValue("service", s.slug as BookingData["service"], {
-                    shouldValidate: true,
-                    shouldTouch: true,
-                  })
-                }
+                active={selected.includes(slug)}
+                onClick={() => toggleService(slug)}
               >
                 <div className="flex items-start gap-3 pr-6">
                   <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary-subtle text-primary">
@@ -139,7 +140,7 @@ function StepService() {
             );
           })}
         </div>
-        <ErrorMsg name="service" />
+        <ErrorMsg name="services" />
       </div>
 
       <div>
@@ -316,15 +317,36 @@ function StepConfirm() {
   const { watch, register } = useFormContext<BookingData>();
   const v = watch();
   const price = estimatePrice(v);
-  const serviceName = services.find((s) => s.slug === v.service)?.name;
   const freqLabel = FREQUENCIES.find((f) => f.value === v.frequency)?.label;
+  const nameOf = (slug: string) => services.find((s) => s.slug === slug)?.name ?? slug;
 
   return (
     <div className="space-y-6">
       <div className="rounded-2xl border border-border bg-card p-5">
         <h3 className="mb-1 text-base font-bold text-card-foreground">Ringkasan pesanan</h3>
         <div className="divide-y divide-border">
-          <SummaryRow label="Layanan" value={serviceName} />
+          <div className="py-2">
+            <div className="mb-1 text-sm text-muted-foreground">
+              Layanan{price.items.length > 1 ? ` (${price.items.length})` : ""}
+            </div>
+            {price.items.length > 0 ? (
+              <ul className="space-y-1">
+                {price.items.map((it) => (
+                  <li
+                    key={it.slug}
+                    className="flex items-start justify-between gap-4 text-sm"
+                  >
+                    <span className="font-medium text-foreground">{nameOf(it.slug)}</span>
+                    <span className="text-right font-medium text-foreground">
+                      {formatRupiah(it.price)}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <span className="text-sm text-muted-foreground">-</span>
+            )}
+          </div>
           <SummaryRow label="Frekuensi" value={freqLabel} />
           <SummaryRow label="Properti" value={v.propertyType} />
           <SummaryRow label="Durasi" value={v.duration ? `${v.duration} jam` : undefined} />
@@ -433,28 +455,27 @@ function Progress({ step }: { step: number }) {
 
 export default function BookingForm() {
   // Layanan bisa diprapilih lewat query param, mis.
-  // /pesan?service=servis-ac&service=cuci-sofa (dipakai tombol "Pesan Sekarang"
-  // di chat). Kalau ada yang valid, layanan langsung terpilih dan alur loncat
-  // ke step 2 (Detail & Jadwal).
-  //
-  // Catatan: form ini masih satu layanan per pesanan, jadi bila beberapa slug
-  // dikirim kita memilih yang pertama valid.
+  // /pesan?service=servis-ac&service=taman-kebun (dipakai tombol "Pesan
+  // Sekarang" di chat). Semua slug valid langsung terpilih dan alur loncat ke
+  // step 2 (Detail & Jadwal).
   const searchParams = useSearchParams();
-  const requested = searchParams.getAll("service");
-  const validServices = requested.filter((s): s is BookingData["service"] =>
-    (SERVICE_SLUGS as readonly string[]).includes(s),
-  );
-  const presetService = validServices[0];
+  const presetServices = searchParams
+    .getAll("service")
+    .filter((s): s is BookingData["services"][number] =>
+      (SERVICE_SLUGS as readonly string[]).includes(s),
+    );
+  // Buang duplikat, jaga urutan.
+  const uniquePreset = Array.from(new Set(presetServices));
 
   const methods = useForm<BookingData>({
     resolver: zodResolver(bookingSchema),
     mode: "onTouched",
     // Nilai form disimpan di sini (react-hook-form context) — tidak hilang saat mundur.
     defaultValues: {
-      service: presetService,
+      services: uniquePreset,
       // Beri frekuensi default agar form tetap valid saat step 1 dilewati;
       // pengguna masih bisa mengubahnya lewat tombol "Kembali".
-      frequency: presetService ? "sekali" : undefined,
+      frequency: uniquePreset.length > 0 ? "sekali" : undefined,
       date: "",
       notes: "",
       fullName: "",
@@ -467,7 +488,7 @@ export default function BookingForm() {
     },
   });
 
-  const [step, setStep] = useState(presetService ? 1 : 0);
+  const [step, setStep] = useState(uniquePreset.length > 0 ? 1 : 0);
   const [dir, setDir] = useState(1);
   const [done, setDone] = useState(false);
 

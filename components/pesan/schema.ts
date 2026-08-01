@@ -46,8 +46,8 @@ function notInPast(dateStr: string) {
 }
 
 export const bookingSchema = z.object({
-  // Step 1 — Pilih Layanan
-  service: z.enum(SERVICE_SLUGS, { error: "Pilih salah satu layanan" }),
+  // Step 1 — Pilih Layanan (bisa lebih dari satu)
+  services: z.array(z.enum(SERVICE_SLUGS)).min(1, "Pilih minimal satu layanan"),
   frequency: z.enum(["sekali", "mingguan", "bulanan"], {
     error: "Pilih frekuensi pemesanan",
   }),
@@ -80,7 +80,7 @@ export type BookingData = z.infer<typeof bookingSchema>;
 
 /** Field yang divalidasi di tiap step (untuk trigger per-step). */
 export const stepFields: (keyof BookingData)[][] = [
-  ["service", "frequency"],
+  ["services", "frequency"],
   ["propertyType", "duration", "date", "time", "notes"],
   ["fullName", "phone", "address", "city", "postalCode", "addressNote"],
   ["agree"],
@@ -107,15 +107,31 @@ const BASE_PRICE: Record<(typeof SERVICE_SLUGS)[number], number> = {
 
 const SERVICE_FEE = 5000;
 
+export type PriceItem = {
+  slug: (typeof SERVICE_SLUGS)[number];
+  price: number;
+};
+
+/**
+ * Estimasi harga untuk beberapa layanan sekaligus.
+ * - Setiap layanan dihitung: harga dasar × faktor durasi × faktor frekuensi.
+ * - Subtotal = jumlah harga semua layanan.
+ * - Biaya layanan = satu flat fee (sekali, selama ada minimal satu layanan).
+ * - Total = subtotal + biaya layanan.
+ */
 export function estimatePrice(data: Partial<BookingData>) {
-  const base = data.service ? BASE_PRICE[data.service] : 0;
   const durationFactor = data.duration ? Number(data.duration) / 2 : 1; // 2 jam = 1x
   const freqFactor =
     FREQUENCIES.find((f) => f.value === data.frequency)?.factor ?? 1;
 
-  const subtotal = Math.round(base * durationFactor * freqFactor);
+  const items: PriceItem[] = (data.services ?? []).map((slug) => ({
+    slug,
+    price: Math.round(BASE_PRICE[slug] * durationFactor * freqFactor),
+  }));
+
+  const subtotal = items.reduce((sum, it) => sum + it.price, 0);
   const fee = subtotal > 0 ? SERVICE_FEE : 0;
-  return { subtotal, fee, total: subtotal + fee };
+  return { items, subtotal, fee, total: subtotal + fee };
 }
 
 export function formatRupiah(n: number) {

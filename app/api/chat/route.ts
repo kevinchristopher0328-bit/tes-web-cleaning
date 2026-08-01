@@ -59,6 +59,7 @@ Aturan:
 - Jangan gunakan karakter | atau ] di dalam nama/deskripsi/harga selain sebagai pemisah tag.
 - Boleh menulis maksimal satu kalimat pengantar singkat sebelum tag, tapi detail layanan tetap hanya di dalam tag — jangan diulang sebagai teks biasa.
 - Setelah SEMUA kartu layanan, SELALU keluarkan tag [SEKALIAN] (persis begitu, tanpa isi) sebagai opsi menambah layanan lain.
+- Pengguna BISA memesan beberapa layanan sekaligus dalam satu pesanan. Jika beberapa layanan relevan dengan kebutuhan pengguna, boleh merekomendasikan lebih dari satu — masing-masing sebagai tag [SERVICE:...] terpisah — dan semuanya digabung ke satu pemesanan lewat satu tombol.
 - Frontend menampilkan tiap [SERVICE:...] sebagai kartu info (nama, deskripsi, harga) dan OTOMATIS menambahkan satu tombol "Pesan Sekarang" untuk memesan semua layanan sekaligus. Jadi jangan menulis ajakan atau tautan pemesanan sebagai teks — cukup keluarkan tag-nya. Jangan menjelaskan tag ini ke pengguna.`;
 
 const MODEL = "gemini-3.6-flash";
