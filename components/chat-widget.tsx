@@ -1,8 +1,13 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import Link from "next/link";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { MessageCircle, X, Send, Sparkles } from "lucide-react";
+
+// Tag [PESAN:/path] yang disisipkan bot saat merekomendasikan layanan —
+// frontend mengubahnya jadi tombol "Pesan Sekarang".
+const PESAN_TAG = /\[PESAN:([^\]]+)\]/g;
 
 /* -------------------------------------------------------------------------- */
 /*  Asisten AI "Bantu" — widget chat mengambang.                              */
@@ -221,10 +226,52 @@ function Bubble({
             : "bg-muted text-card-foreground",
         ].join(" ")}
       >
-        {content || (busy ? <TypingDots /> : null)}
+        {isUser
+          ? content
+          : content
+            ? renderAssistantContent(content)
+            : busy
+              ? <TypingDots />
+              : null}
       </div>
     </div>
   );
+}
+
+/**
+ * Ubah teks balasan bot jadi ReactNode: teks biasa + tombol "Pesan Sekarang"
+ * untuk setiap tag [PESAN:/pesan]. Tag mentahnya dihapus dari tampilan.
+ */
+function renderAssistantContent(content: string): React.ReactNode {
+  const nodes: React.ReactNode[] = [];
+  let lastIndex = 0;
+  let key = 0;
+  let match: RegExpExecArray | null;
+
+  PESAN_TAG.lastIndex = 0;
+  while ((match = PESAN_TAG.exec(content)) !== null) {
+    const href = match[1];
+    if (match.index > lastIndex) {
+      nodes.push(<span key={key++}>{content.slice(lastIndex, match.index)}</span>);
+    }
+    nodes.push(
+      <Link
+        key={key++}
+        href={href}
+        className="mt-2 flex w-fit items-center gap-1.5 rounded-full bg-primary px-4 py-2 text-xs font-bold text-primary-foreground shadow-sm transition-colors hover:bg-primary-hover focus:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
+      >
+        <Sparkles size={14} />
+        Pesan Sekarang
+      </Link>,
+    );
+    lastIndex = match.index + match[0].length;
+  }
+
+  if (lastIndex < content.length) {
+    nodes.push(<span key={key++}>{content.slice(lastIndex)}</span>);
+  }
+
+  return nodes;
 }
 
 function TypingDots() {
