@@ -491,6 +491,8 @@ export default function BookingForm() {
   const [step, setStep] = useState(uniquePreset.length > 0 ? 1 : 0);
   const [dir, setDir] = useState(1);
   const [done, setDone] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
 
   async function next() {
     const ok = await methods.trigger(stepFields[step]);
@@ -505,12 +507,32 @@ export default function BookingForm() {
     setStep((s) => Math.max(s - 1, 0));
   }
 
-  function onValid(data: BookingData) {
+  async function onValid(data: BookingData) {
     if (step !== TOTAL - 1) return; // guard: hanya submit di step terakhir
-    // Tidak ada backend — tampilkan konfirmasi sukses.
-    console.log("Pesanan:", data);
-    setDone(true);
-    window.scrollTo({ top: 0, behavior: "smooth" });
+    if (submitting) return;
+
+    setSubmitting(true);
+    setSubmitError(null);
+    try {
+      // Kirim pesanan ke Notion lewat API route.
+      const res = await fetch("/api/orders", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      });
+      if (!res.ok) {
+        const d = await res.json().catch(() => null);
+        throw new Error(d?.error ?? "Gagal mengirim pesanan.");
+      }
+      setDone(true);
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    } catch (err) {
+      setSubmitError(
+        err instanceof Error ? err.message : "Gagal mengirim pesanan. Coba lagi ya.",
+      );
+    } finally {
+      setSubmitting(false);
+    }
   }
 
   const Current = STEPS[step];
@@ -584,12 +606,19 @@ export default function BookingForm() {
                   </AnimatePresence>
                 </div>
 
+                {/* Pesan error saat submit gagal */}
+                {submitError && step === TOTAL - 1 && (
+                  <p className="mt-6 text-center text-sm font-medium text-danger">
+                    {submitError}
+                  </p>
+                )}
+
                 {/* Navigasi */}
-                <div className="mt-10 flex items-center justify-between gap-3">
+                <div className="mt-6 flex items-center justify-between gap-3">
                   <button
                     type="button"
                     onClick={back}
-                    disabled={step === 0}
+                    disabled={step === 0 || submitting}
                     className="inline-flex items-center gap-2 rounded-xl px-4 py-3 text-sm font-semibold text-muted-foreground transition-colors hover:text-foreground disabled:pointer-events-none disabled:opacity-0"
                   >
                     <ArrowLeft size={18} />
@@ -608,10 +637,11 @@ export default function BookingForm() {
                   ) : (
                     <button
                       type="submit"
-                      className="inline-flex items-center gap-2 rounded-xl bg-accent px-7 py-3 text-sm font-semibold text-accent-foreground shadow-sm transition-colors hover:bg-accent-hover"
+                      disabled={submitting}
+                      className="inline-flex items-center gap-2 rounded-xl bg-accent px-7 py-3 text-sm font-semibold text-accent-foreground shadow-sm transition-colors hover:bg-accent-hover disabled:opacity-60"
                     >
-                      Pesan Sekarang
-                      <Check size={18} strokeWidth={2.5} />
+                      {submitting ? "Mengirim…" : "Pesan Sekarang"}
+                      {!submitting && <Check size={18} strokeWidth={2.5} />}
                     </button>
                   )}
                 </div>
