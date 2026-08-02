@@ -8,6 +8,7 @@ import { ShieldCheck, RefreshCw, Wallet, Tag } from "lucide-react";
 import { animationsEnabled } from "@/lib/anim";
 
 gsap.registerPlugin(useGSAP, ScrollTrigger);
+ScrollTrigger.config({ ignoreMobileResize: true });
 
 const reasons = [
   {

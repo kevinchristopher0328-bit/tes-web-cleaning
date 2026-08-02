@@ -9,6 +9,7 @@ import { services } from "@/src/data/services";
 import { animationsEnabled } from "@/lib/anim";
 
 gsap.registerPlugin(useGSAP, ScrollTrigger);
+ScrollTrigger.config({ ignoreMobileResize: true });
 
 export default function ServicesSection() {
   const gridRef = useRef<HTMLDivElement>(null);

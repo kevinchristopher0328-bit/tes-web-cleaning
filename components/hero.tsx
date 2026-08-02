@@ -20,6 +20,9 @@ import {
 import { animationsEnabled } from "@/lib/anim";
 
 gsap.registerPlugin(useGSAP, ScrollTrigger);
+// Abaikan resize akibat address bar iOS Safari muncul/hilang agar ScrollTrigger
+// tidak refresh berlebihan / salah hitung posisi di mobile.
+ScrollTrigger.config({ ignoreMobileResize: true });
 
 // Format angka count-up (mis. 12000 -> "12.000", 4.9 -> "4.9").
 function formatCount(n: number, decimals: number, thousand: boolean) {
@@ -290,6 +293,10 @@ export default function Hero() {
           },
         });
       });
+
+      // Recalculate posisi ScrollTrigger setelah web font selesai dimuat
+      // (next/font swap bisa menggeser layout, terutama di iOS Safari).
+      document.fonts?.ready.then(() => ScrollTrigger.refresh());
     },
     { scope: rootRef },
   );
