@@ -9,11 +9,34 @@ import {
   useTransform,
   type Variants,
 } from "framer-motion";
+import gsap from "gsap";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
+import { useGSAP } from "@gsap/react";
 import {
   HomeCleanIcon,
   SofaIcon,
   AcIcon,
 } from "./service-icons";
+
+gsap.registerPlugin(useGSAP, ScrollTrigger);
+
+// Animasi hanya di desktop, dan hormati prefers-reduced-motion.
+function animationsEnabled() {
+  if (typeof window === "undefined") return false;
+  return (
+    window.matchMedia("(min-width: 1024px)").matches &&
+    !window.matchMedia("(prefers-reduced-motion: reduce)").matches
+  );
+}
+
+// Format angka count-up (mis. 12000 -> "12.000", 4.9 -> "4.9").
+function formatCount(n: number, decimals: number, thousand: boolean) {
+  const fixed = decimals > 0 ? n.toFixed(decimals) : String(Math.round(n));
+  if (!thousand) return fixed;
+  const [intPart, frac] = fixed.split(".");
+  const grouped = intPart.replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+  return frac ? `${grouped}.${frac}` : grouped;
+}
 
 /* -------------------------------------------------------------------------- */
 /*  Animasi: stagger fade-up, 60ms antar elemen                                */
@@ -196,63 +219,103 @@ function SearchBar() {
 /* -------------------------------------------------------------------------- */
 
 export default function Hero() {
+  const rootRef = useRef<HTMLElement>(null);
+
+  useGSAP(
+    () => {
+      if (!animationsEnabled() || !rootRef.current) return;
+
+      // Masuk: fade + slide up, satu per satu.
+      gsap.from(".js-hero-item", {
+        opacity: 0,
+        y: 20,
+        duration: 0.6,
+        ease: "power2.out",
+        stagger: 0.1,
+        clearProps: "all",
+      });
+
+      // Count-up angka statistik saat terlihat.
+      const counters = rootRef.current.querySelectorAll<HTMLElement>(".js-count");
+      counters.forEach((el) => {
+        const value = parseFloat(el.dataset.value ?? "0");
+        const decimals = parseInt(el.dataset.decimals ?? "0", 10);
+        const thousand = el.dataset.thousand === "1";
+        const suffix = el.dataset.suffix ?? "";
+        const proxy = { n: 0 };
+        gsap.to(proxy, {
+          n: value,
+          duration: 1.2,
+          ease: "power2.out",
+          scrollTrigger: { trigger: el, start: "top 85%", once: true },
+          onUpdate: () => {
+            el.textContent = formatCount(proxy.n, decimals, thousand) + suffix;
+          },
+        });
+      });
+    },
+    { scope: rootRef },
+  );
+
   return (
-    <section className="relative overflow-hidden bg-gradient-to-b from-blue-800 to-blue-950">
+    <section
+      ref={rootRef}
+      className="relative overflow-hidden bg-gradient-to-b from-blue-800 to-blue-950"
+    >
       {/* dekorasi */}
       <div className="pointer-events-none absolute -left-24 top-24 h-72 w-72 rounded-full bg-blue-500/30 blur-3xl" />
       <div className="pointer-events-none absolute -right-16 top-1/2 h-72 w-72 rounded-full bg-accent/15 blur-3xl" />
 
       <div className="relative mx-auto grid max-w-content items-center gap-12 px-6 pb-20 pt-32 sm:pt-36 lg:grid-cols-2 lg:gap-8 lg:pb-28 lg:pt-40">
         {/* Kolom kiri: teks + search + trust */}
-        <motion.div variants={container} initial="hidden" animate="show">
-          <motion.span
-            variants={fadeUp}
-            className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-4 py-1.5 text-xs font-semibold text-white backdrop-blur sm:text-sm"
-          >
+        <div>
+          <span className="js-hero-item inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-4 py-1.5 text-xs font-semibold text-white backdrop-blur sm:text-sm">
             <span className="h-2 w-2 rounded-full bg-accent" />
             #1 marketplace jasa rumah tangga
-          </motion.span>
+          </span>
 
-          <motion.h1
-            variants={fadeUp}
-            className="mt-5 text-4xl font-extrabold leading-[1.1] text-white sm:text-5xl lg:text-6xl"
-          >
+          <h1 className="js-hero-item mt-5 text-4xl font-extrabold leading-[1.1] text-white sm:text-5xl lg:text-6xl">
             Urusan rumah beres,{" "}
             <span className="text-blue-200">hidup kamu lega.</span>
-          </motion.h1>
+          </h1>
 
-          <motion.p
-            variants={fadeUp}
-            className="mt-5 max-w-lg text-base text-blue-100/90 sm:text-lg"
-          >
+          <p className="js-hero-item mt-5 max-w-lg text-base text-blue-100/90 sm:text-lg">
             Pesan mitra terverifikasi untuk bersih-bersih, servis AC,
             dan lainnya. Cukup pilih lokasi dan layanan — sisanya kami yang urus.
-          </motion.p>
+          </p>
 
-          <motion.div variants={fadeUp} className="mt-8">
+          <div className="js-hero-item mt-8">
             <SearchBar />
-          </motion.div>
+          </div>
 
           {/* Trust bar */}
-          <motion.div
-            variants={fadeUp}
-            className="mt-6 flex flex-wrap items-center gap-x-3 gap-y-2 text-sm text-blue-100/90"
-          >
-            <span className="font-semibold text-white">12.000+</span>
+          <div className="js-hero-item mt-6 flex flex-wrap items-center gap-x-3 gap-y-2 text-sm text-blue-100/90">
+            <span
+              className="js-count font-semibold text-white"
+              data-value="12000"
+              data-decimals="0"
+              data-thousand="1"
+              data-suffix="+"
+            >
+              12.000+
+            </span>
             <span>pesanan selesai</span>
             <span className="text-white/30">·</span>
             <span className="inline-flex items-center gap-1 font-semibold text-white">
               <span className="text-accent">
                 <StarIcon />
               </span>
-              Rating 4.9
+              Rating{" "}
+              <span className="js-count" data-value="4.9" data-decimals="1">
+                4.9
+              </span>
             </span>
             <span className="text-white/30">·</span>
             <span className="inline-flex items-center gap-1">
               <span aria-hidden>✓</span> Mitra terverifikasi
             </span>
-          </motion.div>
-        </motion.div>
+          </div>
+        </div>
 
         {/* Kolom kanan: kartu floating + parallax */}
         <div className="lg:pl-6">

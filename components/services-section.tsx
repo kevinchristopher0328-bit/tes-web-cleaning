@@ -2,31 +2,51 @@
 
 import { useRef } from "react";
 import Link from "next/link";
-import { motion, useInView, useReducedMotion, type Variants } from "framer-motion";
+import gsap from "gsap";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
+import { useGSAP } from "@gsap/react";
 import { services } from "@/src/data/services";
 
-const container: Variants = {
-  hidden: {},
-  show: {
-    transition: { staggerChildren: 0.09, delayChildren: 0.05 },
-  },
-};
+gsap.registerPlugin(useGSAP, ScrollTrigger);
 
-const card: Variants = {
-  hidden: { opacity: 0, y: 24 },
-  show: {
-    opacity: 1,
-    y: 0,
-    transition: { duration: 0.5, ease: [0.22, 1, 0.36, 1] },
-  },
-};
+// Animasi hanya di desktop, dan hormati prefers-reduced-motion.
+function animationsEnabled() {
+  if (typeof window === "undefined") return false;
+  return (
+    window.matchMedia("(min-width: 1024px)").matches &&
+    !window.matchMedia("(prefers-reduced-motion: reduce)").matches
+  );
+}
 
 export default function ServicesSection() {
-  const ref = useRef<HTMLDivElement>(null);
-  const reduce = useReducedMotion();
-  // Munculkan sekali saat 20% section masuk viewport.
-  const inView = useInView(ref, { once: true, margin: "0px 0px -15% 0px" });
-  const show = reduce || inView; // reduced-motion: tampil langsung tanpa scroll
+  const gridRef = useRef<HTMLDivElement>(null);
+
+  useGSAP(
+    () => {
+      if (!animationsEnabled() || !gridRef.current) return;
+
+      const cards = gridRef.current.querySelectorAll<HTMLElement>(".js-service-card");
+      // Matikan CSS transition selama GSAP menganimasikan transform (hindari jank),
+      // pulihkan setelah selesai agar efek hover tetap halus.
+      cards.forEach((c) => (c.style.transition = "none"));
+
+      gsap.from(cards, {
+        opacity: 0,
+        y: 20,
+        duration: 0.5,
+        ease: "power2.out",
+        stagger: 0.1,
+        clearProps: "transform,opacity",
+        scrollTrigger: {
+          trigger: gridRef.current,
+          start: "top 80%",
+          once: true,
+        },
+        onComplete: () => cards.forEach((c) => (c.style.transition = "")),
+      });
+    },
+    { scope: gridRef },
+  );
 
   return (
     <section id="layanan" className="bg-muted/40 py-24">
@@ -44,20 +64,16 @@ export default function ServicesSection() {
           </p>
         </div>
 
-        <motion.div
-          ref={ref}
-          variants={container}
-          initial="hidden"
-          animate={show ? "show" : "hidden"}
+        <div
+          ref={gridRef}
           className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3"
         >
           {services.map((s) => {
             const Icon = s.icon;
             return (
-              <motion.article
+              <article
                 key={s.slug}
-                variants={card}
-                className="group relative flex h-full flex-col rounded-2xl border border-border bg-card p-6 shadow-sm transition-all duration-300 hover:-translate-y-1.5 hover:border-primary/60 hover:shadow-glow"
+                className="js-service-card group relative flex h-full flex-col rounded-2xl border border-border bg-card p-6 shadow-sm transition-all duration-300 hover:-translate-y-1.5 hover:border-primary/60 hover:shadow-glow"
               >
                 <span className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary-subtle text-primary transition-transform duration-300 ease-out group-hover:rotate-6 group-hover:scale-110 group-hover:bg-primary group-hover:text-primary-foreground">
                   <Icon size={24} strokeWidth={1.75} />
@@ -86,10 +102,10 @@ export default function ServicesSection() {
                     Pesan
                   </Link>
                 </div>
-              </motion.article>
+              </article>
             );
           })}
-        </motion.div>
+        </div>
       </div>
     </section>
   );
