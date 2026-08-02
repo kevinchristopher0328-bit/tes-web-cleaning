@@ -336,19 +336,34 @@ export default function Navbar() {
 
           {/* Right side */}
           <div className="flex items-center gap-2">
-            <Link
-              href={loggedIn ? "/profil" : "/login"}
-              aria-label={loggedIn ? "Profil" : "Masuk"}
-              className={[
-                "hidden items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-medium transition-colors md:inline-flex",
-                onDark
-                  ? "text-white/90 hover:bg-white/10 hover:text-white"
-                  : "text-foreground/80 hover:bg-muted hover:text-foreground",
-              ].join(" ")}
-            >
-              <User size={18} />
-              {loggedIn ? "Profil" : "Masuk"}
-            </Link>
+            {loggedIn ? (
+              <Link
+                href="/profil"
+                aria-label="Profil"
+                className={[
+                  "hidden items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-medium transition-colors md:inline-flex",
+                  onDark
+                    ? "text-white/90 hover:bg-white/10 hover:text-white"
+                    : "text-foreground/80 hover:bg-muted hover:text-foreground",
+                ].join(" ")}
+              >
+                <User size={18} />
+                Profil
+              </Link>
+            ) : (
+              <Link
+                href="/login"
+                className={[
+                  "hidden items-center gap-1.5 rounded-lg border px-5 py-2.5 text-sm font-semibold transition-colors md:inline-flex",
+                  onDark
+                    ? "border-white/40 text-white hover:bg-white/10"
+                    : "border-border text-foreground hover:bg-muted",
+                ].join(" ")}
+              >
+                <User size={16} />
+                Masuk
+              </Link>
+            )}
             <Link
               href="/pesan"
               className="hidden rounded-lg bg-accent px-5 py-2.5 text-sm font-semibold text-accent-foreground shadow-sm transition-colors hover:bg-accent-hover md:inline-flex"
