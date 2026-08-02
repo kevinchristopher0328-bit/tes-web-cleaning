@@ -196,18 +196,16 @@ function MobileOverlay({
           </motion.div>
         ))}
 
-        {loggedIn && (
-          <motion.div variants={itemVariants}>
-            <Link
-              href="/profil"
-              onClick={onClose}
-              className="flex items-center gap-2 rounded-xl px-2 py-3 text-lg font-semibold text-foreground transition-colors hover:bg-muted"
-            >
-              <User size={20} />
-              Profil
-            </Link>
-          </motion.div>
-        )}
+        <motion.div variants={itemVariants}>
+          <Link
+            href={loggedIn ? "/profil" : "/login"}
+            onClick={onClose}
+            className="flex items-center gap-2 rounded-xl px-2 py-3 text-lg font-semibold text-foreground transition-colors hover:bg-muted"
+          >
+            <User size={20} />
+            {loggedIn ? "Profil" : "Masuk"}
+          </Link>
+        </motion.div>
 
         <motion.div variants={itemVariants} className="mt-4">
           <Link
@@ -338,21 +336,19 @@ export default function Navbar() {
 
           {/* Right side */}
           <div className="flex items-center gap-2">
-            {loggedIn && (
-              <Link
-                href="/profil"
-                aria-label="Profil"
-                className={[
-                  "hidden items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-medium transition-colors md:inline-flex",
-                  onDark
-                    ? "text-white/90 hover:bg-white/10 hover:text-white"
-                    : "text-foreground/80 hover:bg-muted hover:text-foreground",
-                ].join(" ")}
-              >
-                <User size={18} />
-                Profil
-              </Link>
-            )}
+            <Link
+              href={loggedIn ? "/profil" : "/login"}
+              aria-label={loggedIn ? "Profil" : "Masuk"}
+              className={[
+                "hidden items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-medium transition-colors md:inline-flex",
+                onDark
+                  ? "text-white/90 hover:bg-white/10 hover:text-white"
+                  : "text-foreground/80 hover:bg-muted hover:text-foreground",
+              ].join(" ")}
+            >
+              <User size={18} />
+              {loggedIn ? "Profil" : "Masuk"}
+            </Link>
             <Link
               href="/pesan"
               className="hidden rounded-lg bg-accent px-5 py-2.5 text-sm font-semibold text-accent-foreground shadow-sm transition-colors hover:bg-accent-hover md:inline-flex"
