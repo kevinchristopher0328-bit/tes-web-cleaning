@@ -80,7 +80,7 @@ export default function ServicesSection() {
                     </span>
                   </div>
                   <Link
-                    href={s.href}
+                    href={`/pesan?service=${s.slug}`}
                     className="rounded-lg bg-secondary px-4 py-2 text-sm font-semibold text-secondary-foreground transition-colors group-hover:bg-primary group-hover:text-primary-foreground"
                   >
                     Pesan
