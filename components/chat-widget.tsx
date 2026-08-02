@@ -140,7 +140,7 @@ export default function ChatWidget() {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 24, scale: 0.98 }}
             transition={{ duration: 0.24, ease: [0.22, 1, 0.36, 1] }}
-            className="fixed bottom-24 right-5 z-50 flex h-[min(70vh,560px)] w-[min(92vw,380px)] flex-col overflow-hidden rounded-3xl border border-border bg-card shadow-xl"
+            className="fixed bottom-24 right-5 z-50 flex h-[560px] max-h-[70vh] w-[min(92vw,380px)] flex-col overflow-hidden rounded-3xl border border-border bg-card shadow-xl"
           >
             {/* Header */}
             <div className="flex items-center gap-3 border-b border-border bg-primary px-4 py-3 text-primary-foreground">
@@ -189,7 +189,8 @@ export default function ChatWidget() {
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 placeholder="Tulis pesan…"
-                className="min-w-0 flex-1 rounded-full border border-border bg-background px-4 py-2.5 text-sm text-foreground outline-none placeholder:text-muted-foreground focus-visible:ring-2 focus-visible:ring-ring/40"
+                // text-base (16px) mencegah iOS Safari auto-zoom saat input difokus.
+                className="min-w-0 flex-1 rounded-full border border-border bg-background px-4 py-2.5 text-base text-foreground outline-none placeholder:text-muted-foreground focus-visible:ring-2 focus-visible:ring-ring/40"
               />
               <button
                 type="submit"

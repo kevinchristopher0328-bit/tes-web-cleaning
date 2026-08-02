@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Plus_Jakarta_Sans, Inter } from "next/font/google";
 import "./globals.css";
 import MotionProvider from "@/components/motion-provider";
@@ -25,6 +25,15 @@ export const metadata: Metadata = {
   title: "Beres — Design System",
   description:
     "Design system marketplace jasa rumah tangga Indonesia. Hangat, terpercaya, blue + white.",
+};
+
+// maximum-scale=1 mencegah iOS Safari auto-zoom saat input chat difokus.
+// Menghasilkan: <meta name="viewport"
+//   content="width=device-width, initial-scale=1, maximum-scale=1" />
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
 };
 
 export default function RootLayout({
