@@ -17,17 +17,9 @@ import {
   SofaIcon,
   AcIcon,
 } from "./service-icons";
+import { animationsEnabled } from "@/lib/anim";
 
 gsap.registerPlugin(useGSAP, ScrollTrigger);
-
-// Animasi hanya di desktop, dan hormati prefers-reduced-motion.
-function animationsEnabled() {
-  if (typeof window === "undefined") return false;
-  return (
-    window.matchMedia("(min-width: 1024px)").matches &&
-    !window.matchMedia("(prefers-reduced-motion: reduce)").matches
-  );
-}
 
 // Format angka count-up (mis. 12000 -> "12.000", 4.9 -> "4.9").
 function formatCount(n: number, decimals: number, thousand: boolean) {
@@ -113,6 +105,28 @@ function FloatingCards() {
   const y3 = useTransform(scrollYProgress, [0, 1], [0, reduce ? 0 : -46]);
   const ys = [y0, y1, y2, y3];
 
+  // Float lembut & terus-menerus pada tiap kartu (wrapper terpisah agar tidak
+  // bentrok dengan parallax framer di luar & hover-lift di dalam).
+  useGSAP(
+    () => {
+      if (!animationsEnabled() || !ref.current) return;
+      const floats = ref.current.querySelectorAll<HTMLElement>(".js-float-card");
+      gsap.fromTo(
+        floats,
+        { y: -8 },
+        {
+          y: 8,
+          duration: 3,
+          ease: "sine.inOut",
+          repeat: -1,
+          yoyo: true,
+          stagger: { each: 0.6, from: "random" },
+        },
+      );
+    },
+    { scope: ref },
+  );
+
   return (
     <motion.div
       ref={ref}
@@ -126,18 +140,20 @@ function FloatingCards() {
 
       {cards.map((c, i) => (
         <motion.div key={c.title} variants={fadeUp} style={{ y: ys[i] }}>
-          <div
-            className={[
-              "rounded-2xl border border-white/15 bg-white/10 p-4 shadow-xl backdrop-blur-md transition-transform duration-300 hover:-translate-y-1 sm:p-5",
-              i % 2 === 1 ? "mt-6 sm:mt-10" : "",
-              c.tone,
-            ].join(" ")}
-          >
-            <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-white text-primary shadow-sm">
-              <c.Icon width={22} height={22} />
-            </span>
-            <h3 className="mt-3 text-base font-bold text-white">{c.title}</h3>
-            <p className="mt-0.5 text-xs text-blue-100/80">{c.meta}</p>
+          <div className="js-float-card">
+            <div
+              className={[
+                "rounded-2xl border border-white/15 bg-white/10 p-4 shadow-xl backdrop-blur-md transition-transform duration-300 hover:-translate-y-1 sm:p-5",
+                i % 2 === 1 ? "mt-6 sm:mt-10" : "",
+                c.tone,
+              ].join(" ")}
+            >
+              <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-white text-primary shadow-sm">
+                <c.Icon width={22} height={22} />
+              </span>
+              <h3 className="mt-3 text-base font-bold text-white">{c.title}</h3>
+              <p className="mt-0.5 text-xs text-blue-100/80">{c.meta}</p>
+            </div>
           </div>
         </motion.div>
       ))}
@@ -225,17 +241,38 @@ export default function Hero() {
     () => {
       if (!animationsEnabled() || !rootRef.current) return;
 
-      // Masuk: fade + slide up, satu per satu.
-      gsap.from(".js-hero-item", {
+      // Masuk: badge pop dulu, lalu headline per baris, lalu elemen lainnya.
+      const tl = gsap.timeline({ defaults: { clearProps: "all" } });
+      tl.from(".js-badge", {
         opacity: 0,
-        y: 20,
-        duration: 0.6,
+        scale: 0.8,
+        duration: 0.5,
         ease: "power2.out",
-        stagger: 0.1,
-        clearProps: "all",
-      });
+      })
+        .from(
+          ".js-headline-line",
+          {
+            opacity: 0,
+            y: 50,
+            duration: 0.8,
+            ease: "power4.out",
+            stagger: 0.12,
+          },
+          "-=0.2",
+        )
+        .from(
+          ".js-hero-item",
+          {
+            opacity: 0,
+            y: 20,
+            duration: 0.6,
+            ease: "power2.out",
+            stagger: 0.1,
+          },
+          "-=0.5",
+        );
 
-      // Count-up angka statistik saat terlihat.
+      // Count-up angka statistik saat terlihat, dengan ease halus.
       const counters = rootRef.current.querySelectorAll<HTMLElement>(".js-count");
       counters.forEach((el) => {
         const value = parseFloat(el.dataset.value ?? "0");
@@ -245,8 +282,8 @@ export default function Hero() {
         const proxy = { n: 0 };
         gsap.to(proxy, {
           n: value,
-          duration: 1.2,
-          ease: "power2.out",
+          duration: 1.6,
+          ease: "power1.out",
           scrollTrigger: { trigger: el, start: "top 85%", once: true },
           onUpdate: () => {
             el.textContent = formatCount(proxy.n, decimals, thousand) + suffix;
@@ -269,14 +306,14 @@ export default function Hero() {
       <div className="relative mx-auto grid max-w-content items-center gap-12 px-6 pb-20 pt-32 sm:pt-36 lg:grid-cols-2 lg:gap-8 lg:pb-28 lg:pt-40">
         {/* Kolom kiri: teks + search + trust */}
         <div>
-          <span className="js-hero-item inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-4 py-1.5 text-xs font-semibold text-white backdrop-blur sm:text-sm">
+          <span className="js-badge inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-4 py-1.5 text-xs font-semibold text-white backdrop-blur sm:text-sm">
             <span className="h-2 w-2 rounded-full bg-accent" />
             #1 marketplace jasa rumah tangga
           </span>
 
-          <h1 className="js-hero-item mt-5 text-4xl font-extrabold leading-[1.1] text-white sm:text-5xl lg:text-6xl">
-            Urusan rumah beres,{" "}
-            <span className="text-blue-200">hidup kamu lega.</span>
+          <h1 className="mt-5 text-4xl font-extrabold leading-[1.1] text-white sm:text-5xl lg:text-6xl">
+            <span className="js-headline-line block">Urusan rumah beres,</span>
+            <span className="js-headline-line block text-blue-200">hidup kamu lega.</span>
           </h1>
 
           <p className="js-hero-item mt-5 max-w-lg text-base text-blue-100/90 sm:text-lg">

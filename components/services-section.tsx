@@ -6,17 +6,9 @@ import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { useGSAP } from "@gsap/react";
 import { services } from "@/src/data/services";
+import { animationsEnabled } from "@/lib/anim";
 
 gsap.registerPlugin(useGSAP, ScrollTrigger);
-
-// Animasi hanya di desktop, dan hormati prefers-reduced-motion.
-function animationsEnabled() {
-  if (typeof window === "undefined") return false;
-  return (
-    window.matchMedia("(min-width: 1024px)").matches &&
-    !window.matchMedia("(prefers-reduced-motion: reduce)").matches
-  );
-}
 
 export default function ServicesSection() {
   const gridRef = useRef<HTMLDivElement>(null);
@@ -32,10 +24,10 @@ export default function ServicesSection() {
 
       gsap.from(cards, {
         opacity: 0,
-        y: 20,
-        duration: 0.5,
-        ease: "power2.out",
-        stagger: 0.1,
+        y: 40,
+        duration: 0.6,
+        ease: "back.out(1.2)", // sedikit overshoot alami
+        stagger: 0.15,
         clearProps: "transform,opacity",
         scrollTrigger: {
           trigger: gridRef.current,

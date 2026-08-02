@@ -2,6 +2,7 @@ import Navbar from "@/components/navbar";
 import Hero from "@/components/hero";
 import HowItWorks from "@/components/how-it-works";
 import ServicesSection from "@/components/services-section";
+import WhyBeres from "@/components/why-beres";
 import Pricing from "@/components/pricing";
 import Testimonials from "@/components/testimonials";
 import Faq from "@/components/faq";
@@ -14,6 +15,7 @@ export default function Home() {
       <Hero />
       <HowItWorks />
       <ServicesSection />
+      <WhyBeres />
       <Pricing />
       <Testimonials />
       <Faq />
