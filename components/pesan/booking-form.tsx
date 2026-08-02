@@ -1,8 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
+import { supabase } from "@/lib/supabase";
 import { FormProvider, useForm, useFormContext } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { AnimatePresence, motion } from "framer-motion";
@@ -493,6 +494,35 @@ export default function BookingForm() {
   const [done, setDone] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
+  const [showRegisterPrompt, setShowRegisterPrompt] = useState(false);
+
+  // Pre-fill data alamat dari profil bila user sudah login.
+  useEffect(() => {
+    let active = true;
+    (async () => {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (!active || !user) return;
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("full_name, phone, address, city, postal_code")
+        .eq("id", user.id)
+        .single();
+      if (!active || !profile) return;
+      const fill = (name: keyof BookingData, value?: string | null) => {
+        if (value) methods.setValue(name, value);
+      };
+      fill("fullName", profile.full_name);
+      fill("phone", profile.phone);
+      fill("address", profile.address);
+      fill("city", profile.city);
+      fill("postalCode", profile.postal_code);
+    })();
+    return () => {
+      active = false;
+    };
+  }, [methods]);
 
   async function next() {
     const ok = await methods.trigger(stepFields[step]);
@@ -524,6 +554,28 @@ export default function BookingForm() {
         const d = await res.json().catch(() => null);
         throw new Error(d?.error ?? "Gagal mengirim pesanan.");
       }
+
+      // Simpan alamat ke profil bila login; kalau tidak, tawarkan daftar.
+      try {
+        const {
+          data: { user },
+        } = await supabase.auth.getUser();
+        if (user) {
+          await supabase.from("profiles").upsert({
+            id: user.id,
+            full_name: data.fullName,
+            phone: data.phone,
+            address: data.address,
+            city: data.city,
+            postal_code: data.postalCode,
+          });
+        } else {
+          setShowRegisterPrompt(true);
+        }
+      } catch {
+        // Best-effort — jangan gagalkan pesanan bila simpan profil bermasalah.
+      }
+
       setDone(true);
       window.scrollTo({ top: 0, behavior: "smooth" });
     } catch (err) {
@@ -566,9 +618,27 @@ export default function BookingForm() {
               Kami sedang mencocokkanmu dengan mitra terverifikasi terdekat. Detail
               pesanan sudah dikirim ke nomor HP-mu.
             </p>
+
+            {showRegisterPrompt && (
+              <div className="mt-8 w-full max-w-md rounded-2xl border border-primary/30 bg-primary-subtle/50 p-5 text-center">
+                <p className="text-sm font-semibold text-foreground">
+                  Simpan alamat & lacak pesananmu
+                </p>
+                <p className="mt-1 text-sm text-muted-foreground">
+                  Daftar akun Beres supaya pemesanan berikutnya lebih cepat.
+                </p>
+                <Link
+                  href="/login"
+                  className="mt-4 inline-flex rounded-xl bg-primary px-6 py-3 text-sm font-semibold text-primary-foreground shadow-sm transition-colors hover:bg-primary-hover"
+                >
+                  Daftar Sekarang
+                </Link>
+              </div>
+            )}
+
             <Link
               href="/"
-              className="mt-8 rounded-xl bg-primary px-6 py-3 text-sm font-semibold text-primary-foreground shadow-sm transition-colors hover:bg-primary-hover"
+              className="mt-8 rounded-xl border border-border px-6 py-3 text-sm font-semibold text-foreground shadow-sm transition-colors hover:bg-muted"
             >
               Kembali ke beranda
             </Link>
