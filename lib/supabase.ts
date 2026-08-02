@@ -31,4 +31,8 @@ export type Profile = {
   address: string | null;
   city: string | null;
   postal_code: string | null;
+  address_1: string | null;
+  address_1_label: string | null;
+  address_2: string | null;
+  address_2_label: string | null;
 };
