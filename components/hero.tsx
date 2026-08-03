@@ -237,6 +237,24 @@ function SearchBar() {
 /*  Hero                                                                       */
 /* -------------------------------------------------------------------------- */
 
+// Ikon latar mengambang (14) — tersebar, transparan, tiap ikon float unik.
+const bgIcons = [
+  { e: "🧹", top: "7%", left: "5%", size: 34, op: 0.13, dur: 9, delay: 0, y: -14, r: 5 },
+  { e: "🔧", top: "11%", left: "23%", size: 26, op: 0.11, dur: 11, delay: 1.2, y: -10, r: -4 },
+  { e: "🧽", top: "8%", left: "45%", size: 30, op: 0.12, dur: 7, delay: 0.5, y: -16, r: 6 },
+  { e: "🔨", top: "6%", left: "67%", size: 40, op: 0.1, dur: 12, delay: 2, y: -12, r: -6 },
+  { e: "🫧", top: "13%", left: "88%", size: 24, op: 0.14, dur: 8, delay: 0.8, y: -18, r: 4 },
+  { e: "🪛", top: "33%", left: "11%", size: 28, op: 0.11, dur: 10, delay: 1.6, y: -9, r: -5 },
+  { e: "🧴", top: "41%", left: "33%", size: 22, op: 0.12, dur: 13, delay: 0.3, y: -8, r: 6 },
+  { e: "🔩", top: "29%", left: "57%", size: 32, op: 0.1, dur: 6, delay: 2.4, y: -15, r: -4 },
+  { e: "❄️", top: "45%", left: "82%", size: 30, op: 0.13, dur: 9.5, delay: 1, y: -13, r: 5 },
+  { e: "🧺", top: "63%", left: "7%", size: 38, op: 0.11, dur: 11.5, delay: 0.6, y: -12, r: -6 },
+  { e: "💧", top: "71%", left: "27%", size: 24, op: 0.14, dur: 7.5, delay: 1.9, y: -17, r: 4 },
+  { e: "⚙️", top: "58%", left: "49%", size: 44, op: 0.1, dur: 12.5, delay: 0.4, y: -10, r: -5 },
+  { e: "🪣", top: "73%", left: "70%", size: 28, op: 0.12, dur: 8.5, delay: 2.2, y: -14, r: 6 },
+  { e: "🪚", top: "66%", left: "91%", size: 34, op: 0.11, dur: 10.5, delay: 1.4, y: -11, r: -4 },
+];
+
 export default function Hero() {
   const rootRef = useRef<HTMLElement>(null);
 
@@ -304,13 +322,42 @@ export default function Hero() {
   return (
     <section
       ref={rootRef}
-      className="relative overflow-hidden bg-gradient-to-b from-blue-800 to-blue-950"
+      className="hero-gradient-anim relative overflow-hidden"
+      style={{
+        background:
+          "linear-gradient(135deg, #1a1f6e, #2d3494, #3b5bdb, #1a1f6e)",
+        backgroundSize: "300% 300%",
+      }}
     >
       {/* dekorasi */}
       <div className="pointer-events-none absolute -left-24 top-24 h-72 w-72 rounded-full bg-blue-500/30 blur-3xl" />
       <div className="pointer-events-none absolute -right-16 top-1/2 h-72 w-72 rounded-full bg-accent/15 blur-3xl" />
 
-      <div className="relative mx-auto grid max-w-content items-center gap-12 px-6 pb-20 pt-32 sm:pt-36 lg:grid-cols-2 lg:gap-8 lg:pb-28 lg:pt-40">
+      {/* Ikon latar mengambang (z-0, di belakang konten) */}
+      <div aria-hidden className="pointer-events-none absolute inset-0 z-0 overflow-hidden">
+        {bgIcons.map((ic, i) => (
+          <span
+            key={i}
+            className="hero-float-icon absolute select-none leading-none"
+            style={
+              {
+                top: ic.top,
+                left: ic.left,
+                fontSize: `${ic.size}px`,
+                opacity: ic.op,
+                animationDuration: `${ic.dur}s`,
+                animationDelay: `${ic.delay}s`,
+                "--hf-y": `${ic.y}px`,
+                "--hf-r": `${ic.r}deg`,
+              } as React.CSSProperties
+            }
+          >
+            {ic.e}
+          </span>
+        ))}
+      </div>
+
+      <div className="relative z-[1] mx-auto grid max-w-content items-center gap-12 px-6 pb-20 pt-32 sm:pt-36 lg:grid-cols-2 lg:gap-8 lg:pb-28 lg:pt-40">
         {/* Kolom kiri: teks + search + trust */}
         <div>
           <span className="js-badge inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-4 py-1.5 text-xs font-semibold text-white backdrop-blur sm:text-sm">

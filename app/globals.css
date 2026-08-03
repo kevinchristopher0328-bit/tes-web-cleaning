@@ -259,6 +259,40 @@
 }
 
 /* =============================================================================
+   HERO — animated gradient + floating background icons.
+   ============================================================================= */
+@keyframes hero-gradient {
+  0%,
+  100% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+}
+
+@keyframes hero-float {
+  0%,
+  100% {
+    transform: translateY(0) rotate(0deg);
+  }
+  50% {
+    transform: translateY(var(--hf-y, -12px)) rotate(var(--hf-r, 4deg));
+  }
+}
+
+.hero-gradient-anim {
+  animation: hero-gradient 8s ease infinite;
+}
+
+.hero-float-icon {
+  animation-name: hero-float;
+  animation-timing-function: ease-in-out;
+  animation-iteration-count: infinite;
+  will-change: transform;
+}
+
+/* =============================================================================
    REDUCED MOTION — hormati preferensi pengguna.
    Framer Motion ditangani global via <MotionConfig reducedMotion="user">;
    di sini kita matikan smooth-scroll, marquee, dan transisi/animasi CSS.
