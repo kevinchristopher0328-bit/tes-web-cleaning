@@ -296,13 +296,13 @@ function StepDetails() {
                   onClick={() => toggleAddOn(slug)}
                   aria-pressed={checked}
                   className={[
-                    "inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-medium transition-colors",
+                    "inline-flex items-center gap-2 rounded-full border px-4 py-2.5 text-sm font-medium transition-colors",
                     checked
                       ? "border-primary bg-primary text-primary-foreground"
                       : "border-border bg-card text-card-foreground hover:bg-muted",
                   ].join(" ")}
                 >
-                  {checked ? <Check size={14} strokeWidth={3} /> : <Icon size={14} strokeWidth={1.75} />}
+                  {checked ? <Check size={16} strokeWidth={3} /> : <Icon size={16} strokeWidth={1.75} />}
                   {s.name}
                 </button>
               );
