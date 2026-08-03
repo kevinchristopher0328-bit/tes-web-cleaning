@@ -183,6 +183,21 @@ function StepDetails() {
   const time = watch("time");
   const today = new Date().toISOString().slice(0, 10);
 
+  // Layanan yang sudah dipilih; "sekalian" menawarkan sisanya sebagai tambahan.
+  const selectedServices = watch("services") ?? [];
+  const frequency = watch("frequency");
+  // Layanan inti dari step 1 (snapshot saat masuk step) — dikecualikan dari chip.
+  const [baseServices] = useState<string[]>(() => watch("services") ?? []);
+  const addOns = services.filter((s) => !baseServices.includes(s.slug));
+  const price = estimatePrice({ services: selectedServices, duration, frequency });
+
+  const toggleAddOn = (slug: BookingData["services"][number]) => {
+    const next = selectedServices.includes(slug)
+      ? selectedServices.filter((s) => s !== slug)
+      : [...selectedServices, slug];
+    setValue("services", next, { shouldValidate: true, shouldTouch: true });
+  };
+
   return (
     <div className="space-y-7">
       <div>
@@ -261,6 +276,44 @@ function StepDetails() {
           {...register("notes")}
         />
       </Field>
+
+      {/* Sekalian? — tambah layanan lain untuk sekali kunjungan */}
+      {addOns.length > 0 && (
+        <div className="rounded-2xl border border-border bg-muted/30 p-4">
+          <h3 className="text-sm font-medium text-foreground">Sekalian?</h3>
+          <p className="mt-0.5 text-xs text-muted-foreground">
+            Tambah layanan lain untuk sekali kunjungan.
+          </p>
+          <div className="mt-3 flex flex-wrap gap-2">
+            {addOns.map((s) => {
+              const Icon = s.icon;
+              const slug = s.slug as BookingData["services"][number];
+              const checked = selectedServices.includes(slug);
+              return (
+                <button
+                  key={s.slug}
+                  type="button"
+                  onClick={() => toggleAddOn(slug)}
+                  aria-pressed={checked}
+                  className={[
+                    "inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-medium transition-colors",
+                    checked
+                      ? "border-primary bg-primary text-primary-foreground"
+                      : "border-border bg-card text-card-foreground hover:bg-muted",
+                  ].join(" ")}
+                >
+                  {checked ? <Check size={14} strokeWidth={3} /> : <Icon size={14} strokeWidth={1.75} />}
+                  {s.name}
+                </button>
+              );
+            })}
+          </div>
+          <p className="mt-3 text-xs text-muted-foreground">
+            Estimasi total:{" "}
+            <span className="font-bold text-primary">{formatRupiah(price.total)}</span>
+          </p>
+        </div>
+      )}
     </div>
   );
 }
