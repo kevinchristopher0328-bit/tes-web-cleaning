@@ -38,6 +38,57 @@ function fmtDate(d: string | null) {
   });
 }
 
+// Emoji + rekomendasi frekuensi per layanan, untuk indikator jadwal di riwayat.
+const SERVICE_META: Record<
+  string,
+  { emoji: string; intervalDays: number; intervalLabel: string }
+> = {
+  "Bersih Rumah": { emoji: "🧹", intervalDays: 14, intervalLabel: "2 minggu" },
+  "Cuci Sofa & Kasur": { emoji: "🛋️", intervalDays: 90, intervalLabel: "3 bulan" },
+  "Dapur & Kamar Mandi": { emoji: "🧽", intervalDays: 30, intervalLabel: "1 bulan" },
+  "Servis AC": { emoji: "❄️", intervalDays: 90, intervalLabel: "3 bulan" },
+  "Taman & Kebun": { emoji: "🌿", intervalDays: 14, intervalLabel: "2 minggu" },
+};
+
+const DAY_MS = 86_400_000;
+
+type ScheduleTone = "success" | "accent" | "danger";
+
+type Schedule = { tone: ScheduleTone; statusText: string; pct: number };
+
+// hijau = masih terjadwal, oranye = jatuh tempo <= 3 hari, merah = terlewat.
+function scheduleFor(intervalDays: number, dateStr: string | null): Schedule | null {
+  if (!dateStr) return null;
+  const last = new Date(dateStr).getTime();
+  if (Number.isNaN(last)) return null;
+  const elapsed = Math.floor((Date.now() - last) / DAY_MS);
+  const daysLeft = intervalDays - elapsed;
+  const pct = Math.max(0, Math.min(100, (elapsed / intervalDays) * 100));
+  if (daysLeft < 0) {
+    return { tone: "danger", statusText: `Terlewat ${-daysLeft} hari`, pct: 100 };
+  }
+  if (daysLeft <= 3) {
+    return {
+      tone: "accent",
+      statusText: daysLeft === 0 ? "Jatuh tempo hari ini" : `Jatuh tempo ${daysLeft} hari lagi`,
+      pct,
+    };
+  }
+  return { tone: "success", statusText: "Masih terjadwal", pct };
+}
+
+const TONE_BG: Record<ScheduleTone, string> = {
+  success: "bg-success",
+  accent: "bg-accent",
+  danger: "bg-danger",
+};
+
+const TONE_TEXT: Record<ScheduleTone, string> = {
+  success: "text-success",
+  accent: "text-accent-subtle-foreground",
+  danger: "text-danger",
+};
+
 export default function ProfilPage() {
   const router = useRouter();
   const [loading, setLoading] = useState(true);
@@ -425,11 +476,10 @@ export default function ProfilPage() {
         {/* Riwayat pesanan */}
         <section>
           <h2 className="mb-3 text-base font-bold text-foreground">Riwayat Pesanan</h2>
-          <OrderList
+          <HistoryList
             orders={history}
             loading={ordersLoading}
             hasPhone={!!profile?.phone}
-            empty="Belum ada riwayat pesanan."
           />
         </section>
 
@@ -508,6 +558,113 @@ function OrderCard({ order }: { order: OrderSummary }) {
       <div className="mt-2 text-sm font-extrabold text-primary">
         {formatRupiah(order.total)}
       </div>
+    </div>
+  );
+}
+
+/* -------------------------------------------------------------------------- */
+/*  Riwayat pesanan — kartu dengan indikator jadwal (tanpa harga/rebook).      */
+/* -------------------------------------------------------------------------- */
+
+function HistoryList({
+  orders,
+  loading,
+  hasPhone,
+}: {
+  orders: OrderSummary[];
+  loading: boolean;
+  hasPhone: boolean;
+}) {
+  if (loading) {
+    return (
+      <div className="space-y-3">
+        {[0, 1, 2].map((i) => (
+          <HistorySkeleton key={i} />
+        ))}
+      </div>
+    );
+  }
+  if (!hasPhone) {
+    return (
+      <p className="text-sm text-muted-foreground">
+        Tambahkan nomor HP di Data Pribadi untuk melacak pesananmu.
+      </p>
+    );
+  }
+  if (orders.length === 0) {
+    return <p className="text-sm text-muted-foreground">Belum ada riwayat pesanan.</p>;
+  }
+  return (
+    <div className="space-y-3">
+      {orders.map((o) => (
+        <HistoryOrderCard key={o.id} order={o} />
+      ))}
+    </div>
+  );
+}
+
+function HistoryOrderCard({ order }: { order: OrderSummary }) {
+  const first = (order.layanan.split(",")[0] ?? "").trim() || "Pesanan";
+  const meta = SERVICE_META[first];
+  const date = order.tanggal ?? order.createdAt;
+  const schedule = meta ? scheduleFor(meta.intervalDays, date) : null;
+
+  return (
+    <div className="rounded-2xl border border-border bg-card p-4">
+      <div className="flex items-center gap-3">
+        <span
+          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-muted text-xl"
+          aria-hidden
+        >
+          {meta?.emoji ?? "🧾"}
+        </span>
+        <div className="min-w-0 flex-1">
+          <div className="flex items-center gap-2">
+            <span className="truncate text-sm font-bold text-card-foreground">{first}</span>
+            {schedule && (
+              <span
+                className={`h-2.5 w-2.5 shrink-0 rounded-full ${TONE_BG[schedule.tone]}`}
+                aria-hidden
+              />
+            )}
+          </div>
+          <div className="mt-0.5 text-xs text-muted-foreground">{fmtDate(date)}</div>
+        </div>
+      </div>
+
+      {meta && schedule && (
+        <div className="mt-3">
+          <div className="h-2 w-full overflow-hidden rounded-full bg-muted">
+            <div
+              className={`h-full rounded-full ${TONE_BG[schedule.tone]} transition-[width] duration-500`}
+              style={{ width: `${schedule.pct}%` }}
+            />
+          </div>
+          <div className="mt-1.5 flex items-center justify-between text-[11px]">
+            <span className="text-muted-foreground">
+              Rekomendasi tiap {meta.intervalLabel}
+            </span>
+            <span className={`font-semibold ${TONE_TEXT[schedule.tone]}`}>
+              {schedule.statusText}
+            </span>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function HistorySkeleton() {
+  return (
+    <div className="rounded-2xl border border-border bg-card p-4">
+      <div className="flex items-center gap-3">
+        <div className="h-10 w-10 shrink-0 animate-pulse rounded-xl bg-muted" />
+        <div className="flex-1 space-y-2">
+          <div className="h-3 w-32 animate-pulse rounded bg-muted" />
+          <div className="h-2.5 w-20 animate-pulse rounded bg-muted" />
+        </div>
+      </div>
+      <div className="mt-3 h-2 w-full animate-pulse rounded-full bg-muted" />
     </div>
   );
 }
