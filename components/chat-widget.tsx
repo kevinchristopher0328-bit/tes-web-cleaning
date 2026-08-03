@@ -33,10 +33,25 @@ export default function ChatWidget() {
   ]);
   const [input, setInput] = useState("");
   const [busy, setBusy] = useState(false);
+  const [showLabel, setShowLabel] = useState(false);
   const reduce = useReducedMotion();
 
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+
+  // Label "Ada yang bisa Bantu?" muncul berkala saat chat tertutup.
+  useEffect(() => {
+    if (open) {
+      setShowLabel(false);
+      return;
+    }
+    let visible = false;
+    const id = setInterval(() => {
+      visible = !visible;
+      setShowLabel(visible);
+    }, 3500);
+    return () => clearInterval(id);
+  }, [open]);
 
   useEffect(() => {
     scrollRef.current?.scrollTo({
@@ -109,27 +124,78 @@ export default function ChatWidget() {
 
   return (
     <>
-      {/* Tombol pemicu */}
-      <motion.button
-        type="button"
-        onClick={() => setOpen((v) => !v)}
-        aria-label={open ? "Tutup asisten" : "Buka asisten Beres"}
-        aria-expanded={open}
-        whileTap={{ scale: 0.92 }}
-        className="fixed bottom-5 right-5 z-50 flex h-14 w-14 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-glow transition-colors hover:bg-primary-hover focus:outline-none focus-visible:ring-4 focus-visible:ring-ring/40"
-      >
-        <AnimatePresence mode="wait" initial={false}>
+      {/* Tombol pemicu + hiasan */}
+      <div className="fixed bottom-5 right-5 z-50">
+        {/* Pulsing ring (hanya saat tertutup) */}
+        {!open && (
           <motion.span
-            key={open ? "close" : "open"}
-            initial={{ rotate: -90, opacity: 0 }}
-            animate={{ rotate: 0, opacity: 1 }}
-            exit={{ rotate: 90, opacity: 0 }}
-            transition={{ duration: 0.18 }}
-          >
-            {open ? <X size={24} /> : <MessageCircle size={24} />}
-          </motion.span>
+            aria-hidden
+            className="absolute inset-0 rounded-full"
+            style={{ background: "linear-gradient(135deg, #3b5bdb, #7c3aed)" }}
+            initial={{ scale: 1, opacity: 0.6 }}
+            animate={{ scale: 1.8, opacity: 0 }}
+            transition={{ duration: 2, repeat: Infinity, ease: "easeOut" }}
+          />
+        )}
+
+        {/* Floating label */}
+        <AnimatePresence>
+          {!open && showLabel && (
+            <motion.div
+              key="label"
+              initial={{ opacity: 0, x: 8 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: 8 }}
+              transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
+              className="absolute right-full top-1/2 mr-3 -translate-y-1/2 whitespace-nowrap rounded-full px-4 py-2 text-sm font-semibold text-white shadow-xl"
+              style={{ backgroundColor: "#1a1f6e" }}
+            >
+              Ada yang bisa Bantu? 👋
+            </motion.div>
+          )}
         </AnimatePresence>
-      </motion.button>
+
+        {/* Button */}
+        <motion.button
+          type="button"
+          onClick={() => setOpen((v) => !v)}
+          aria-label={open ? "Tutup asisten" : "Buka asisten Beres"}
+          aria-expanded={open}
+          whileTap={{ scale: 0.92 }}
+          animate={open ? { y: 0 } : { y: [0, -4, 0] }}
+          transition={
+            open
+              ? { duration: 0.2 }
+              : { duration: 3, repeat: Infinity, ease: "easeInOut" }
+          }
+          className="relative flex h-16 w-16 items-center justify-center rounded-full text-white shadow-glow transition-[filter] hover:brightness-110 focus:outline-none focus-visible:ring-4 focus-visible:ring-ring/40"
+          style={{ background: "linear-gradient(135deg, #3b5bdb, #7c3aed)" }}
+        >
+          {/* Sparkle badge */}
+          {!open && (
+            <motion.span
+              aria-hidden
+              className="absolute -right-1 -top-1 text-sm"
+              animate={{ scale: [1, 1.2, 1], opacity: [0.85, 1, 0.85] }}
+              transition={{ duration: 2.5, repeat: Infinity, ease: "easeInOut" }}
+            >
+              ✨
+            </motion.span>
+          )}
+
+          <AnimatePresence mode="wait" initial={false}>
+            <motion.span
+              key={open ? "close" : "open"}
+              initial={{ rotate: -90, opacity: 0 }}
+              animate={{ rotate: 0, opacity: 1 }}
+              exit={{ rotate: 90, opacity: 0 }}
+              transition={{ duration: 0.18 }}
+            >
+              {open ? <X size={26} /> : <MessageCircle size={26} />}
+            </motion.span>
+          </AnimatePresence>
+        </motion.button>
+      </div>
 
       <AnimatePresence>
         {open && (
