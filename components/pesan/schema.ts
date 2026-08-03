@@ -59,7 +59,8 @@ export const bookingSchema = z.object({
     .string()
     .min(1, "Tanggal wajib diisi")
     .refine(notInPast, "Tanggal tidak boleh di masa lalu"),
-  time: z.enum(TIME_SLOTS, { error: "Pilih slot waktu kedatangan" }),
+  // Salah satu TIME_SLOTS, atau "Sekarang (HH:MM)" dari chip ⚡ Sekarang.
+  time: z.string().min(1, "Pilih slot waktu kedatangan"),
   notes: z.string().max(300, "Catatan maksimal 300 karakter").optional(),
 
   // Step 3 — Alamat

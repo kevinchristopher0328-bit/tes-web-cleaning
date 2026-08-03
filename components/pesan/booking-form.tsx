@@ -182,6 +182,16 @@ function StepDetails() {
   const duration = watch("duration");
   const time = watch("time");
   const today = new Date().toISOString().slice(0, 10);
+  const nowSelected = (time ?? "").startsWith("Sekarang");
+
+  // "⚡ Sekarang" — isi tanggal hari ini & jam saat ini.
+  const selectNow = () => {
+    const n = new Date();
+    const hh = String(n.getHours()).padStart(2, "0");
+    const mm = String(n.getMinutes()).padStart(2, "0");
+    setValue("date", today, { shouldValidate: true, shouldTouch: true });
+    setValue("time", `Sekarang (${hh}:${mm})`, { shouldValidate: true, shouldTouch: true });
+  };
 
   // Layanan yang sudah dipilih; "sekalian" menawarkan sisanya sebagai tambahan.
   const selectedServices = watch("services") ?? [];
@@ -248,6 +258,19 @@ function StepDetails() {
         <div>
           <span className="mb-1.5 block text-sm font-medium text-foreground">Waktu kedatangan</span>
           <div className="grid grid-cols-2 gap-2">
+            <button
+              type="button"
+              onClick={selectNow}
+              aria-pressed={nowSelected}
+              className={[
+                "col-span-2 rounded-lg border px-2 py-2 text-xs font-semibold transition-colors",
+                nowSelected
+                  ? "border-primary bg-primary text-primary-foreground"
+                  : "border-primary/40 bg-primary-subtle text-primary hover:bg-primary/10",
+              ].join(" ")}
+            >
+              ⚡ Sekarang
+            </button>
             {TIME_SLOTS.map((t) => (
               <button
                 key={t}
