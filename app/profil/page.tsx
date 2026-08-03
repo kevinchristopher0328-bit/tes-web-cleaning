@@ -203,6 +203,7 @@ export default function ProfilPage() {
   const [editingSlot, setEditingSlot] = useState<1 | 2 | null>(null);
   const [form, setForm] = useState<Address>(emptyAddress());
   const [savingAddr, setSavingAddr] = useState(false);
+  const [addrError, setAddrError] = useState<string | null>(null);
   const setField = (key: keyof Address, value: string) =>
     setForm((f) => ({ ...f, [key]: value }));
 
@@ -280,6 +281,28 @@ export default function ProfilPage() {
     setForm(readAddress(raw ?? null, labelCol ?? null) ?? emptyAddress());
   }
 
+  // Upsert profil lalu perbarui state dari baris yang dikembalikan (agar UI
+  // langsung ter-refresh). Mengembalikan true bila sukses.
+  async function upsertProfile(payload: Record<string, string | null>) {
+    setAddrError(null);
+    const { data, error } = await supabase
+      .from("profiles")
+      .upsert(payload)
+      .select("*")
+      .single();
+    if (error) {
+      console.error("Gagal menyimpan profil:", error);
+      setAddrError(error.message || "Gagal menyimpan. Coba lagi.");
+      return false;
+    }
+    if (data) {
+      setProfile(data as Profile);
+    } else if (userId) {
+      await refreshProfile(userId);
+    }
+    return true;
+  }
+
   async function saveAddr(slot: 1 | 2) {
     if (!userId) return;
     setSavingAddr(true);
@@ -293,9 +316,8 @@ export default function ProfilPage() {
         payload.address_2 = json;
         payload.address_2_label = form.label || null;
       }
-      await supabase.from("profiles").upsert(payload);
-      await refreshProfile(userId);
-      setEditingSlot(null);
+      const ok = await upsertProfile(payload);
+      if (ok) setEditingSlot(null);
     } finally {
       setSavingAddr(false);
     }
@@ -307,21 +329,19 @@ export default function ProfilPage() {
       slot === 1
         ? { id: userId, address_1: null, address_1_label: null }
         : { id: userId, address_2: null, address_2_label: null };
-    await supabase.from("profiles").upsert(payload);
-    await refreshProfile(userId);
+    await upsertProfile(payload);
   }
 
   // Jadikan utama = tukar slot 1 dan slot 2.
   async function setPrimary() {
     if (!userId || !profile) return;
-    await supabase.from("profiles").upsert({
+    await upsertProfile({
       id: userId,
       address_1: profile.address_2,
       address_1_label: profile.address_2_label,
       address_2: profile.address_1,
       address_2_label: profile.address_1_label,
     });
-    await refreshProfile(userId);
   }
 
   async function handleLogout() {
@@ -448,6 +468,11 @@ export default function ProfilPage() {
         {/* Alamat tersimpan */}
         <section>
           <h2 className="mb-3 text-base font-bold text-foreground">Alamat Tersimpan</h2>
+          {addrError && (
+            <p className="mb-3 rounded-lg bg-danger-subtle px-3 py-2 text-sm font-medium text-danger">
+              {addrError}
+            </p>
+          )}
           <div className="space-y-3">
             {([1, 2] as const).map((slot) => {
               const raw = slot === 1 ? profile?.address_1 : profile?.address_2;
