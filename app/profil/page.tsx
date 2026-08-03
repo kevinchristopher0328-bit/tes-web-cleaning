@@ -89,6 +89,103 @@ const TONE_TEXT: Record<ScheduleTone, string> = {
   danger: "text-danger",
 };
 
+/* -------------------------------------------------------------------------- */
+/*  Alamat terstruktur — disimpan sebagai JSON di kolom address_1 / address_2. */
+/* -------------------------------------------------------------------------- */
+
+type Address = {
+  label: string;
+  street: string;
+  rtRw: string;
+  kelurahan: string;
+  kecamatan: string;
+  city: string;
+  province: string;
+  postalCode: string;
+  note: string;
+};
+
+function emptyAddress(): Address {
+  return {
+    label: "Rumah",
+    street: "",
+    rtRw: "",
+    kelurahan: "",
+    kecamatan: "",
+    city: "",
+    province: "",
+    postalCode: "",
+    note: "",
+  };
+}
+
+// Baca alamat dari kolom: JSON (format baru) atau teks biasa (data lama).
+function readAddress(raw: string | null, labelCol: string | null): Address | null {
+  if (!raw) return null;
+  try {
+    const o = JSON.parse(raw) as Partial<Address>;
+    if (o && typeof o === "object" && !Array.isArray(o)) {
+      return {
+        label: o.label ?? labelCol ?? "",
+        street: o.street ?? "",
+        rtRw: o.rtRw ?? "",
+        kelurahan: o.kelurahan ?? "",
+        kecamatan: o.kecamatan ?? "",
+        city: o.city ?? "",
+        province: o.province ?? "",
+        postalCode: o.postalCode ?? "",
+        note: o.note ?? "",
+      };
+    }
+  } catch {
+    // Bukan JSON — perlakukan sebagai alamat teks lama.
+  }
+  return { ...emptyAddress(), label: labelCol ?? "", street: raw };
+}
+
+// Baris tampilan alamat (buang bagian yang kosong).
+function addressLines(a: Address): string[] {
+  const lines: string[] = [];
+  if (a.street) lines.push(a.street);
+  if (a.rtRw) lines.push(`RT/RW ${a.rtRw}`);
+  const kel = [
+    a.kelurahan && `Kel. ${a.kelurahan}`,
+    a.kecamatan && `Kec. ${a.kecamatan}`,
+  ]
+    .filter(Boolean)
+    .join(", ");
+  if (kel) lines.push(kel);
+  const cityLine = [[a.city, a.province].filter(Boolean).join(", "), a.postalCode]
+    .filter(Boolean)
+    .join(" ");
+  if (cityLine) lines.push(cityLine);
+  return lines;
+}
+
+function AddrField({
+  label,
+  value,
+  onChange,
+  placeholder,
+}: {
+  label: string;
+  value: string;
+  onChange: (v: string) => void;
+  placeholder?: string;
+}) {
+  return (
+    <label className="block">
+      <span className="mb-1.5 block text-sm font-medium text-foreground">{label}</span>
+      <input
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        placeholder={placeholder}
+        className={inputCls}
+      />
+    </label>
+  );
+}
+
 export default function ProfilPage() {
   const router = useRouter();
   const [loading, setLoading] = useState(true);
@@ -102,11 +199,12 @@ export default function ProfilPage() {
   const [phoneInput, setPhoneInput] = useState("");
   const [savingProfile, setSavingProfile] = useState(false);
 
-  // Alamat editing (slot 1/2)
+  // Alamat editing (slot 1/2) — form terstruktur.
   const [editingSlot, setEditingSlot] = useState<1 | 2 | null>(null);
-  const [addrInput, setAddrInput] = useState("");
-  const [labelInput, setLabelInput] = useState("");
+  const [form, setForm] = useState<Address>(emptyAddress());
   const [savingAddr, setSavingAddr] = useState(false);
+  const setField = (key: keyof Address, value: string) =>
+    setForm((f) => ({ ...f, [key]: value }));
 
   // Pesanan dari Notion
   const [orders, setOrders] = useState<OrderSummary[]>([]);
@@ -177,21 +275,23 @@ export default function ProfilPage() {
 
   function startEditAddr(slot: 1 | 2) {
     setEditingSlot(slot);
-    setAddrInput((slot === 1 ? profile?.address_1 : profile?.address_2) ?? "");
-    setLabelInput((slot === 1 ? profile?.address_1_label : profile?.address_2_label) ?? "");
+    const raw = slot === 1 ? profile?.address_1 : profile?.address_2;
+    const labelCol = slot === 1 ? profile?.address_1_label : profile?.address_2_label;
+    setForm(readAddress(raw ?? null, labelCol ?? null) ?? emptyAddress());
   }
 
   async function saveAddr(slot: 1 | 2) {
     if (!userId) return;
     setSavingAddr(true);
     try {
+      const json = JSON.stringify(form);
       const payload: Record<string, string | null> = { id: userId };
       if (slot === 1) {
-        payload.address_1 = addrInput || null;
-        payload.address_1_label = labelInput || null;
+        payload.address_1 = json;
+        payload.address_1_label = form.label || null;
       } else {
-        payload.address_2 = addrInput || null;
-        payload.address_2_label = labelInput || null;
+        payload.address_2 = json;
+        payload.address_2_label = form.label || null;
       }
       await supabase.from("profiles").upsert(payload);
       await refreshProfile(userId);
@@ -350,31 +450,107 @@ export default function ProfilPage() {
           <h2 className="mb-3 text-base font-bold text-foreground">Alamat Tersimpan</h2>
           <div className="space-y-3">
             {([1, 2] as const).map((slot) => {
-              const addr = slot === 1 ? profile?.address_1 : profile?.address_2;
-              const label = slot === 1 ? profile?.address_1_label : profile?.address_2_label;
+              const raw = slot === 1 ? profile?.address_1 : profile?.address_2;
+              const labelCol =
+                slot === 1 ? profile?.address_1_label : profile?.address_2_label;
+              const parsed = readAddress(raw ?? null, labelCol ?? null);
 
               if (editingSlot === slot) {
                 return (
                   <div key={slot} className="rounded-2xl border border-primary/40 bg-card p-5">
-                    <div className="space-y-3">
-                      <input
-                        value={labelInput}
-                        onChange={(e) => setLabelInput(e.target.value)}
-                        placeholder="Label (mis. Rumah, Kantor)"
-                        className={inputCls}
+                    <div className="space-y-4">
+                      {/* Label */}
+                      <div>
+                        <span className="mb-1.5 block text-sm font-medium text-foreground">
+                          Label
+                        </span>
+                        <div className="flex gap-2">
+                          {["Rumah", "Kantor"].map((l) => (
+                            <button
+                              key={l}
+                              type="button"
+                              onClick={() => setField("label", l)}
+                              className={[
+                                "rounded-lg border px-4 py-2 text-sm font-medium transition-colors",
+                                form.label === l
+                                  ? "border-primary bg-primary text-primary-foreground"
+                                  : "border-border bg-card text-card-foreground hover:bg-muted",
+                              ].join(" ")}
+                            >
+                              {l}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+
+                      <AddrField
+                        label="Nama Jalan & Nomor"
+                        value={form.street}
+                        onChange={(v) => setField("street", v)}
+                        placeholder="Jl. Melati No. 12"
                       />
-                      <textarea
-                        value={addrInput}
-                        onChange={(e) => setAddrInput(e.target.value)}
-                        rows={2}
-                        placeholder="Alamat lengkap"
-                        className={inputCls}
-                      />
+
+                      <div className="grid gap-3 sm:grid-cols-2">
+                        <AddrField
+                          label="RT/RW"
+                          value={form.rtRw}
+                          onChange={(v) => setField("rtRw", v)}
+                          placeholder="03/05"
+                        />
+                        <AddrField
+                          label="Kode Pos"
+                          value={form.postalCode}
+                          onChange={(v) => setField("postalCode", v)}
+                          placeholder="12345"
+                        />
+                      </div>
+                      <div className="grid gap-3 sm:grid-cols-2">
+                        <AddrField
+                          label="Kelurahan"
+                          value={form.kelurahan}
+                          onChange={(v) => setField("kelurahan", v)}
+                          placeholder="Cipete"
+                        />
+                        <AddrField
+                          label="Kecamatan"
+                          value={form.kecamatan}
+                          onChange={(v) => setField("kecamatan", v)}
+                          placeholder="Cilandak"
+                        />
+                      </div>
+                      <div className="grid gap-3 sm:grid-cols-2">
+                        <AddrField
+                          label="Kota / Kabupaten"
+                          value={form.city}
+                          onChange={(v) => setField("city", v)}
+                          placeholder="Jakarta Selatan"
+                        />
+                        <AddrField
+                          label="Provinsi"
+                          value={form.province}
+                          onChange={(v) => setField("province", v)}
+                          placeholder="DKI Jakarta"
+                        />
+                      </div>
+
+                      <label className="block">
+                        <span className="mb-1.5 block text-sm font-medium text-foreground">
+                          Catatan
+                        </span>
+                        <textarea
+                          value={form.note}
+                          onChange={(e) => setField("note", e.target.value)}
+                          rows={2}
+                          placeholder="Patokan / landmark (mis. pagar hijau, sebelah warung)"
+                          className={inputCls}
+                        />
+                      </label>
+
                       <div className="flex gap-2">
                         <button
                           type="button"
                           onClick={() => saveAddr(slot)}
-                          disabled={savingAddr || addrInput.trim().length === 0}
+                          disabled={savingAddr || form.street.trim().length === 0}
                           className="rounded-xl bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary-hover disabled:opacity-60"
                         >
                           {savingAddr ? "Menyimpan…" : "Simpan"}
@@ -393,7 +569,7 @@ export default function ProfilPage() {
                 );
               }
 
-              if (!addr) {
+              if (!raw || !parsed) {
                 return (
                   <button
                     key={slot}
@@ -416,7 +592,7 @@ export default function ProfilPage() {
                     <div className="min-w-0 flex-1">
                       <div className="flex items-center gap-2">
                         <span className="text-sm font-bold text-card-foreground">
-                          {label || `Alamat ${slot}`}
+                          {parsed.label || `Alamat ${slot}`}
                         </span>
                         {slot === 1 && (
                           <span className="rounded-full bg-primary px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-primary-foreground">
@@ -424,7 +600,16 @@ export default function ProfilPage() {
                           </span>
                         )}
                       </div>
-                      <p className="mt-1 break-words text-sm text-muted-foreground">{addr}</p>
+                      <div className="mt-1 space-y-0.5 text-sm text-muted-foreground">
+                        {addressLines(parsed).map((line, i) => (
+                          <p key={i} className="break-words">
+                            {line}
+                          </p>
+                        ))}
+                        {parsed.note && (
+                          <p className="break-words text-xs italic">Patokan: {parsed.note}</p>
+                        )}
+                      </div>
 
                       <div className="mt-3 flex flex-wrap gap-2">
                         <button
