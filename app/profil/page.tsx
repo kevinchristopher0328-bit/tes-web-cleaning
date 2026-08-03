@@ -6,6 +6,12 @@ import { useRouter } from "next/navigation";
 import { LogOut, MapPin, Pencil, Trash2, Star, Plus } from "lucide-react";
 import { supabase, type Profile } from "@/lib/supabase";
 import { formatRupiah } from "@/components/pesan/schema";
+import {
+  type Address,
+  emptyAddress,
+  parseAddress,
+  addressLines,
+} from "@/lib/address";
 
 type OrderSummary = {
   id: string;
@@ -88,79 +94,6 @@ const TONE_TEXT: Record<ScheduleTone, string> = {
   accent: "text-accent-subtle-foreground",
   danger: "text-danger",
 };
-
-/* -------------------------------------------------------------------------- */
-/*  Alamat terstruktur — disimpan sebagai JSON di kolom address_1 / address_2. */
-/* -------------------------------------------------------------------------- */
-
-type Address = {
-  label: string;
-  street: string;
-  rtRw: string;
-  kelurahan: string;
-  kecamatan: string;
-  city: string;
-  province: string;
-  postalCode: string;
-  note: string;
-};
-
-function emptyAddress(): Address {
-  return {
-    label: "Rumah",
-    street: "",
-    rtRw: "",
-    kelurahan: "",
-    kecamatan: "",
-    city: "",
-    province: "",
-    postalCode: "",
-    note: "",
-  };
-}
-
-// Baca alamat dari kolom: JSON (format baru) atau teks biasa (data lama).
-function readAddress(raw: string | null, labelCol: string | null): Address | null {
-  if (!raw) return null;
-  try {
-    const o = JSON.parse(raw) as Partial<Address>;
-    if (o && typeof o === "object" && !Array.isArray(o)) {
-      return {
-        label: o.label ?? labelCol ?? "",
-        street: o.street ?? "",
-        rtRw: o.rtRw ?? "",
-        kelurahan: o.kelurahan ?? "",
-        kecamatan: o.kecamatan ?? "",
-        city: o.city ?? "",
-        province: o.province ?? "",
-        postalCode: o.postalCode ?? "",
-        note: o.note ?? "",
-      };
-    }
-  } catch {
-    // Bukan JSON — perlakukan sebagai alamat teks lama.
-  }
-  return { ...emptyAddress(), label: labelCol ?? "", street: raw };
-}
-
-// Baris tampilan alamat (buang bagian yang kosong).
-function addressLines(a: Address): string[] {
-  const lines: string[] = [];
-  if (a.street) lines.push(a.street);
-  if (a.rtRw) lines.push(`RT/RW ${a.rtRw}`);
-  const kel = [
-    a.kelurahan && `Kel. ${a.kelurahan}`,
-    a.kecamatan && `Kec. ${a.kecamatan}`,
-  ]
-    .filter(Boolean)
-    .join(", ");
-  if (kel) lines.push(kel);
-  const cityLine = [[a.city, a.province].filter(Boolean).join(", "), a.postalCode]
-    .filter(Boolean)
-    .join(" ");
-  if (cityLine) lines.push(cityLine);
-  return lines;
-}
 
 function AddrField({
   label,
@@ -278,7 +211,7 @@ export default function ProfilPage() {
     setEditingSlot(slot);
     const raw = slot === 1 ? profile?.address_1 : profile?.address_2;
     const labelCol = slot === 1 ? profile?.address_1_label : profile?.address_2_label;
-    setForm(readAddress(raw ?? null, labelCol ?? null) ?? emptyAddress());
+    setForm(parseAddress(raw ?? null, labelCol ?? null) ?? emptyAddress());
   }
 
   // Upsert profil lalu perbarui state dari baris yang dikembalikan (agar UI
@@ -478,7 +411,7 @@ export default function ProfilPage() {
               const raw = slot === 1 ? profile?.address_1 : profile?.address_2;
               const labelCol =
                 slot === 1 ? profile?.address_1_label : profile?.address_2_label;
-              const parsed = readAddress(raw ?? null, labelCol ?? null);
+              const parsed = parseAddress(raw ?? null, labelCol ?? null);
 
               if (editingSlot === slot) {
                 return (

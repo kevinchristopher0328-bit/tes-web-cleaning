@@ -4,6 +4,12 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { supabase } from "@/lib/supabase";
+import {
+  type Address,
+  parseAddress,
+  addressLines,
+  addressToBookingFields,
+} from "@/lib/address";
 import { FormProvider, useForm, useFormContext } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { AnimatePresence, motion } from "framer-motion";
@@ -264,9 +270,82 @@ function StepDetails() {
 /* -------------------------------------------------------------------------- */
 
 function StepAddress() {
-  const { register } = useFormContext<BookingData>();
+  const { register, setValue } = useFormContext<BookingData>();
+  const [saved, setSaved] = useState<{ slot: 1 | 2; addr: Address }[]>([]);
+  const [selected, setSelected] = useState<1 | 2 | null>(null);
+
+  // Ambil alamat tersimpan dari profil bila user login.
+  useEffect(() => {
+    let active = true;
+    (async () => {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (!active || !user) return;
+      const { data } = await supabase
+        .from("profiles")
+        .select("address_1, address_1_label, address_2, address_2_label")
+        .eq("id", user.id)
+        .single();
+      if (!active || !data) return;
+      const list: { slot: 1 | 2; addr: Address }[] = [];
+      const a1 = parseAddress(data.address_1 ?? null, data.address_1_label ?? null);
+      if (a1) list.push({ slot: 1, addr: a1 });
+      const a2 = parseAddress(data.address_2 ?? null, data.address_2_label ?? null);
+      if (a2) list.push({ slot: 2, addr: a2 });
+      setSaved(list);
+    })();
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  const pickSaved = (slot: 1 | 2, addr: Address) => {
+    const f = addressToBookingFields(addr);
+    const opts = { shouldValidate: true, shouldTouch: true } as const;
+    setValue("address", f.address, opts);
+    setValue("city", f.city, opts);
+    setValue("postalCode", f.postalCode, opts);
+    setValue("addressNote", f.addressNote ?? "", opts);
+    setSelected(slot);
+  };
+
   return (
-    <div className="space-y-5">
+    <div className="space-y-6">
+      {saved.length > 0 && (
+        <div>
+          <h3 className="mb-1 text-sm font-medium text-foreground">Alamat tersimpan</h3>
+          <p className="mb-3 text-xs text-muted-foreground">
+            Pilih salah satu, atau isi manual di bawah.
+          </p>
+          <div className="grid gap-3 sm:grid-cols-2">
+            {saved.map(({ slot, addr }) => (
+              <SelectCard
+                key={slot}
+                active={selected === slot}
+                onClick={() => pickSaved(slot, addr)}
+              >
+                <div className="pr-6">
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm font-bold text-card-foreground">
+                      {addr.label || `Alamat ${slot}`}
+                    </span>
+                    {slot === 1 && (
+                      <span className="rounded-full bg-primary px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-primary-foreground">
+                        Utama
+                      </span>
+                    )}
+                  </div>
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    {addressLines(addr).join(", ")}
+                  </p>
+                </div>
+              </SelectCard>
+            ))}
+          </div>
+        </div>
+      )}
+
       <div className="grid gap-5 sm:grid-cols-2">
         <Field label="Nama lengkap" name="fullName">
           <input placeholder="Nama penerima" className={inputCls} {...register("fullName")} />
