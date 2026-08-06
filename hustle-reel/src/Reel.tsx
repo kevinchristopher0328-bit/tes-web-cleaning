@@ -10,6 +10,10 @@ import { SCENE_SYNC } from "./sync";
 const BASELINE_Y = [740, 880, 1010, 1180];
 const PACE: ScenePace[] = ["cover", "standard", "standard", "payoff"];
 
+// Optional per-scene background clip (in public/). Fill these once the treated
+// clips exist, e.g. "bg-0.mp4"; undefined = keep the plain near-black bg.
+const SCENE_BG: (string | undefined)[] = [undefined, undefined, undefined, undefined];
+
 type SceneData = Omit<SceneProps, "baselineY" | "pace" | "sync" | "durationInFrames">;
 
 const SCENES: SceneData[] = [
@@ -53,6 +57,7 @@ export const Reel: React.FC = () => {
           <Series.Sequence key={scene.index} durationInFrames={DURATIONS[i]} name={`Scene ${scene.index}`}>
             <Scene
               {...scene}
+              bg={SCENE_BG[i]}
               baselineY={BASELINE_Y[i]}
               pace={PACE[i]}
               sync={SCENE_SYNC[i]}

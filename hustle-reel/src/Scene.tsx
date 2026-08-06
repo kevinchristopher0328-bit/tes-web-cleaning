@@ -10,6 +10,7 @@ import { measureText } from "@remotion/layout-utils";
 import { COLORS, FONT_DISPLAY, FONT_TEXT, HEIGHT, MARGIN } from "./theme";
 import { splitHeadline } from "./splitHeadline";
 import { MiniScript } from "./MiniScript";
+import { BackgroundVideo } from "./BackgroundVideo";
 import type { SceneSync } from "./sync";
 
 export type ScenePace = "cover" | "standard" | "payoff";
@@ -20,6 +21,7 @@ export type SceneProps = {
   headline: string[]; // ALL-CAPS, one entry per visual line (rises out of the baseline)
   accentWords: string[]; // headline words colored #fdd000
   cta?: string; // Scene 4 — solid pill
+  bg?: string; // optional treated background clip in public/
   baselineY: number; // this scene's baseline position (shifts down across scenes)
   pace: ScenePace; // motion feel
   sync: SceneSync; // audio-derived frames + word-level script (accent flash, cta, words)
@@ -62,6 +64,7 @@ export const Scene: React.FC<SceneProps> = ({
   headline,
   accentWords,
   cta,
+  bg,
   baselineY,
   pace,
   sync,
@@ -104,6 +107,7 @@ export const Scene: React.FC<SceneProps> = ({
 
   return (
     <AbsoluteFill style={{ backgroundColor: COLORS.bg }}>
+      {bg ? <BackgroundVideo src={bg} durationInFrames={durationInFrames} /> : null}
       <AbsoluteFill
         style={{
           scale: String(pushScale),
