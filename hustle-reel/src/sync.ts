@@ -3,41 +3,327 @@
 export const FPS = 30;
 export const TOTAL_FRAMES = 776;
 
+export type Word = { t: string; s: number; e: number }; // display token + local start/end frame
+
 export type SceneSync = {
   durationInFrames: number;
   accentFlash: number | null; // local frame the headline accent word is spoken
-  footerFlash: number | null; // local frame the footer accent word is spoken
   ctaLand: number | null; // local frame the CTA phrase begins
   exitStart: number; // local frame the exit begins (last word finishing)
+  words: Word[]; // spoken script for this scene, word-level timed (karaoke)
 };
 
 export const SCENE_SYNC: SceneSync[] = [
   {
     "durationInFrames": 214,
     "accentFlash": 37,
-    "footerFlash": null,
     "ctaLand": null,
-    "exitStart": 206
+    "exitStart": 206,
+    "words": [
+      {
+        "t": "This",
+        "s": 0,
+        "e": 12
+      },
+      {
+        "t": "isn't",
+        "s": 12,
+        "e": 25
+      },
+      {
+        "t": "just",
+        "s": 25,
+        "e": 37
+      },
+      {
+        "t": "showing",
+        "s": 37,
+        "e": 59
+      },
+      {
+        "t": "up",
+        "s": 59,
+        "e": 65
+      },
+      {
+        "t": "and",
+        "s": 65,
+        "e": 74
+      },
+      {
+        "t": "working",
+        "s": 74,
+        "e": 96
+      },
+      {
+        "t": "out.",
+        "s": 96,
+        "e": 111
+      },
+      {
+        "t": "Here's",
+        "s": 111,
+        "e": 127
+      },
+      {
+        "t": "what",
+        "s": 127,
+        "e": 139
+      },
+      {
+        "t": "a",
+        "s": 139,
+        "e": 146
+      },
+      {
+        "t": "real",
+        "s": 146,
+        "e": 158
+      },
+      {
+        "t": "session",
+        "s": 158,
+        "e": 180
+      },
+      {
+        "t": "looks",
+        "s": 180,
+        "e": 195
+      },
+      {
+        "t": "like.",
+        "s": 195,
+        "e": 214
+      }
+    ]
   },
   {
     "durationInFrames": 152,
     "accentFlash": 42,
-    "footerFlash": null,
     "ctaLand": null,
-    "exitStart": 144
+    "exitStart": 144,
+    "words": [
+      {
+        "t": "First,",
+        "s": 0,
+        "e": 15
+      },
+      {
+        "t": "we",
+        "s": 15,
+        "e": 19
+      },
+      {
+        "t": "check",
+        "s": 19,
+        "e": 30
+      },
+      {
+        "t": "how",
+        "s": 30,
+        "e": 36
+      },
+      {
+        "t": "you",
+        "s": 36,
+        "e": 42
+      },
+      {
+        "t": "move",
+        "s": 42,
+        "e": 51
+      },
+      {
+        "t": "mobility,",
+        "s": 51,
+        "e": 72
+      },
+      {
+        "t": "strength,",
+        "s": 72,
+        "e": 93
+      },
+      {
+        "t": "anything",
+        "s": 93,
+        "e": 110
+      },
+      {
+        "t": "that",
+        "s": 110,
+        "e": 119
+      },
+      {
+        "t": "needs",
+        "s": 119,
+        "e": 129
+      },
+      {
+        "t": "attention.",
+        "s": 129,
+        "e": 153
+      }
+    ]
   },
   {
     "durationInFrames": 218,
     "accentFlash": 53,
-    "footerFlash": 106,
     "ctaLand": null,
-    "exitStart": 210
+    "exitStart": 210,
+    "words": [
+      {
+        "t": "Then",
+        "s": 0,
+        "e": 13
+      },
+      {
+        "t": "every",
+        "s": 13,
+        "e": 30
+      },
+      {
+        "t": "rep",
+        "s": 30,
+        "e": 40
+      },
+      {
+        "t": "gets",
+        "s": 40,
+        "e": 53
+      },
+      {
+        "t": "watched,",
+        "s": 53,
+        "e": 83
+      },
+      {
+        "t": "not",
+        "s": 83,
+        "e": 93
+      },
+      {
+        "t": "just",
+        "s": 93,
+        "e": 106
+      },
+      {
+        "t": "counted.",
+        "s": 106,
+        "e": 135
+      },
+      {
+        "t": "Form",
+        "s": 135,
+        "e": 149
+      },
+      {
+        "t": "corrected",
+        "s": 149,
+        "e": 178
+      },
+      {
+        "t": "in",
+        "s": 178,
+        "e": 185
+      },
+      {
+        "t": "real",
+        "s": 185,
+        "e": 198
+      },
+      {
+        "t": "time.",
+        "s": 198,
+        "e": 218
+      }
+    ]
   },
   {
     "durationInFrames": 192,
     "accentFlash": 76,
-    "footerFlash": null,
     "ctaLand": 139,
-    "exitStart": 184
+    "exitStart": 184,
+    "words": [
+      {
+        "t": "Progress",
+        "s": 0,
+        "e": 20
+      },
+      {
+        "t": "gets",
+        "s": 20,
+        "e": 30
+      },
+      {
+        "t": "logged,",
+        "s": 30,
+        "e": 51
+      },
+      {
+        "t": "and",
+        "s": 51,
+        "e": 58
+      },
+      {
+        "t": "the",
+        "s": 58,
+        "e": 66
+      },
+      {
+        "t": "plan",
+        "s": 66,
+        "e": 76
+      },
+      {
+        "t": "evolves",
+        "s": 76,
+        "e": 94
+      },
+      {
+        "t": "as",
+        "s": 94,
+        "e": 99
+      },
+      {
+        "t": "you",
+        "s": 99,
+        "e": 106
+      },
+      {
+        "t": "get",
+        "s": 106,
+        "e": 114
+      },
+      {
+        "t": "stronger.",
+        "s": 114,
+        "e": 139
+      },
+      {
+        "t": "DM",
+        "s": 139,
+        "e": 144
+      },
+      {
+        "t": "or",
+        "s": 144,
+        "e": 149
+      },
+      {
+        "t": "WhatsApp",
+        "s": 149,
+        "e": 169
+      },
+      {
+        "t": "to",
+        "s": 169,
+        "e": 174
+      },
+      {
+        "t": "start.",
+        "s": 174,
+        "e": 192
+      }
+    ]
   }
 ];

@@ -9,6 +9,7 @@ import {
 import { measureText } from "@remotion/layout-utils";
 import { COLORS, FONT_DISPLAY, FONT_TEXT, HEIGHT, MARGIN } from "./theme";
 import { splitHeadline } from "./splitHeadline";
+import { MiniScript } from "./MiniScript";
 import type { SceneSync } from "./sync";
 
 export type ScenePace = "cover" | "standard" | "payoff";
@@ -18,13 +19,10 @@ export type SceneProps = {
   label: string; // kicker, ALL-CAPS
   headline: string[]; // ALL-CAPS, one entry per visual line (rises out of the baseline)
   accentWords: string[]; // headline words colored #fdd000
-  sub: string; // sentence case, muted
   cta?: string; // Scene 4 — solid pill
-  footer?: string; // Scene 3 — small tag under the sub
-  footerAccent?: string[]; // accent word within the footer
   baselineY: number; // this scene's baseline position (shifts down across scenes)
   pace: ScenePace; // motion feel
-  sync: SceneSync; // audio-derived frames (accent flash, cta land, exit)
+  sync: SceneSync; // audio-derived frames + word-level script (accent flash, cta, words)
   durationInFrames: number;
 };
 
@@ -63,10 +61,7 @@ export const Scene: React.FC<SceneProps> = ({
   label,
   headline,
   accentWords,
-  sub,
   cta,
-  footer,
-  footerAccent = [],
   baselineY,
   pace,
   sync,
@@ -106,9 +101,6 @@ export const Scene: React.FC<SceneProps> = ({
   const indexX = interpolate(idP, [0, 1], [-40, 0]);
   const idFade = interpolate(frame, [0, 6], [0, 1], { ...clamp, easing: SHARP });
   const labelSpacing = interpolate(frame, [0, 8], [14, 5], { ...clamp, easing: SHARP });
-
-  const subFade = interpolate(frame, [p.subStart, p.subStart + 10], [0, 1], { ...clamp, easing: SHARP });
-  const subY = interpolate(frame, [p.subStart, p.subStart + 12], [12, 0], { ...clamp, easing: SHARP });
 
   return (
     <AbsoluteFill style={{ backgroundColor: COLORS.bg }}>
@@ -239,71 +231,13 @@ export const Scene: React.FC<SceneProps> = ({
             </span>
           </div>
 
-          <p
-            style={{
-              margin: 0,
-              maxWidth: 760,
-              fontFamily: FONT_TEXT,
-              fontWeight: 400,
-              fontSize: 40,
-              lineHeight: 1.35,
-              color: COLORS.muted,
-              opacity: subFade,
-              translate: `0 ${subY}px`,
-            }}
-          >
-            {sub}
-          </p>
-
-          {footer ? (
-            <Footer text={footer} accentWords={footerAccent} flash={sync.footerFlash} subStart={p.subStart} />
-          ) : null}
+          {/* Spoken script, word-synced karaoke — this is what follows the voice */}
+          <MiniScript words={sync.words} />
 
           {cta ? <CtaPill cta={cta} land={sync.ctaLand} /> : null}
         </div>
       </AbsoluteFill>
     </AbsoluteFill>
-  );
-};
-
-// Small footer tag (Scene 3) with its own accent flash-pop.
-const Footer: React.FC<{ text: string; accentWords: string[]; flash: number | null; subStart: number }> = ({
-  text,
-  accentWords,
-  flash,
-  subStart,
-}) => {
-  const frame = useCurrentFrame();
-  const appear = subStart + 14;
-  const opacity = interpolate(frame, [appear, appear + 10], [0, 1], { ...clamp, easing: SHARP });
-  const y = interpolate(frame, [appear, appear + 12], [10, 0], { ...clamp, easing: SHARP });
-  const flashAt = Math.max(flash ?? appear + 6, appear + 6);
-  const segs = splitHeadline(text, accentWords);
-
-  return (
-    <div
-      style={{
-        marginTop: 8,
-        opacity,
-        translate: `0 ${y}px`,
-        fontFamily: FONT_DISPLAY,
-        fontSize: 46,
-        letterSpacing: 0.5,
-        textTransform: "uppercase",
-        color: COLORS.text,
-      }}
-    >
-      {segs.map((s, i) => {
-        if (!s.accent) return <span key={i}>{s.text}</span>;
-        const lit = frame >= flashAt;
-        const pop = frame === flashAt;
-        return (
-          <span key={i} style={{ color: pop ? COLORS.white : lit ? COLORS.accent : COLORS.text }}>
-            {s.text}
-          </span>
-        );
-      })}
-    </div>
   );
 };
 
