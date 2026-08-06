@@ -46,9 +46,9 @@ const SCENES: SceneData[] = [
 
 const DURATIONS = SCENE_SYNC.map((s) => s.durationInFrames);
 
-export const Reel: React.FC = () => {
+export const Reel: React.FC<{ transparent?: boolean }> = ({ transparent = false }) => {
   return (
-    <AbsoluteFill style={{ backgroundColor: COLORS.bg }}>
+    <AbsoluteFill style={{ backgroundColor: transparent ? "transparent" : COLORS.bg }}>
       {/* Narration plays across the whole composition */}
       <Audio src={staticFile("voiceover.mp3")} />
 
@@ -58,6 +58,7 @@ export const Reel: React.FC = () => {
             <Scene
               {...scene}
               bg={SCENE_BG[i]}
+              transparent={transparent}
               baselineY={BASELINE_Y[i]}
               pace={PACE[i]}
               sync={SCENE_SYNC[i]}
@@ -69,9 +70,9 @@ export const Reel: React.FC = () => {
 
       {/* One continuous baseline connecting all four scenes */}
       <Baseline baselineYs={BASELINE_Y} durations={DURATIONS} />
-      {/* Signature marquee + film grain over the whole comp */}
+      {/* Signature marquee + film grain over the whole comp (grain off for alpha) */}
       <Marquee />
-      <Grain />
+      {!transparent && <Grain />}
     </AbsoluteFill>
   );
 };

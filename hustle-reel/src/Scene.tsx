@@ -22,6 +22,7 @@ export type SceneProps = {
   accentWords: string[]; // headline words colored #fdd000
   cta?: string; // Scene 4 — solid pill
   bg?: string; // optional treated background clip in public/
+  transparent?: boolean; // alpha export — no black fill behind the graphics
   baselineY: number; // this scene's baseline position (shifts down across scenes)
   pace: ScenePace; // motion feel
   sync: SceneSync; // audio-derived frames + word-level script (accent flash, cta, words)
@@ -65,6 +66,7 @@ export const Scene: React.FC<SceneProps> = ({
   accentWords,
   cta,
   bg,
+  transparent,
   baselineY,
   pace,
   sync,
@@ -106,8 +108,8 @@ export const Scene: React.FC<SceneProps> = ({
   const labelSpacing = interpolate(frame, [0, 8], [14, 5], { ...clamp, easing: SHARP });
 
   return (
-    <AbsoluteFill style={{ backgroundColor: COLORS.bg }}>
-      {bg ? <BackgroundVideo src={bg} durationInFrames={durationInFrames} /> : null}
+    <AbsoluteFill style={{ backgroundColor: transparent ? "transparent" : COLORS.bg }}>
+      {!transparent && bg ? <BackgroundVideo src={bg} durationInFrames={durationInFrames} /> : null}
       <AbsoluteFill
         style={{
           scale: String(pushScale),
