@@ -16,18 +16,18 @@ const WAV = path.join(cwd, "public", "voiceover.wav");
 // below all occur here, so their spoken time is real even though the on-screen
 // headline copy is authored separately.
 const SENTENCES = [
-  "This isn't just showing up and working out. Here's what a real session looks like.",
-  "First, we check how you move — mobility, strength, anything that needs attention.",
-  "Then every rep gets watched, not just counted. Form corrected in real time.",
-  "Progress gets logged, and the plan evolves as you get stronger. DM or WhatsApp to start.",
+  "Showing up is easy. This is what actually happens inside a real session.",
+  "First, we watch how you move — mobility, strength, anything that needs work before we load up.",
+  "Then every rep gets watched. Not just counted. Form fixed in real time, the part you can't do alone.",
+  "Progress gets logged, the plan evolves as you get stronger. Ready? DM or WhatsApp to start.",
 ];
 
-// Which spoken word drives each scene's accent flash / footer / CTA landing.
+// Which spoken word drives each scene's headline accent flash / CTA landing.
 const TARGETS = [
-  { flash: "showing", footer: null, cta: null },
-  { flash: "move", footer: null, cta: null },
-  { flash: "watched", footer: "counted", cta: null },
-  { flash: "evolves", footer: null, cta: "dm" },
+  { flash: "showing", cta: null },
+  { flash: "move", cta: null },
+  { flash: "watched", cta: null },
+  { flash: "evolves", cta: "dm" },
 ];
 
 const norm = (w) => w.toLowerCase().replace(/[^a-z0-9]/g, "");

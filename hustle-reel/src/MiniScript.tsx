@@ -1,5 +1,5 @@
 import { Easing, interpolate, useCurrentFrame } from "remotion";
-import { COLORS, FONT_TEXT, MARGIN } from "./theme";
+import { COLORS, FONT_TEXT } from "./theme";
 import type { Word } from "./sync";
 
 const clamp = { extrapolateLeft: "clamp", extrapolateRight: "clamp" } as const;
@@ -24,14 +24,12 @@ export const MiniScript: React.FC<{ words: Word[] }> = ({ words }) => {
   return (
     <div
       style={{
-        maxWidth: 820,
-        marginLeft: 0,
-        marginRight: MARGIN,
+        maxWidth: 892, // full margin-to-margin width so long lines stay ≤2 rows
         opacity: blockFade,
         fontFamily: FONT_TEXT,
         fontWeight: 400,
-        fontSize: 36,
-        lineHeight: 1.4,
+        fontSize: 32,
+        lineHeight: 1.42,
         textAlign: "left",
       }}
     >
