@@ -5,35 +5,43 @@ import { ProgressBar } from "./ProgressBar";
 import { Captions } from "./Captions";
 import { COLORS, SCENE_FRAMES } from "./theme";
 
-const SCENES: SceneProps[] = [
+// headline is split into explicit visual lines (matching the natural wrap) so
+// each line can be revealed on its own stagger. variant tunes the motion feel.
+type SceneData = Omit<SceneProps, "durationInFrames">;
+
+const SCENES: SceneData[] = [
   {
     index: "00",
     label: "INSIDE A 1-ON-1 SESSION",
-    headline: "NOT JUST SHOWING UP.",
+    headline: ["NOT JUST", "SHOWING UP."],
     accentWords: ["SHOWING UP"],
     sub: "Here's what a real session actually looks like.",
+    variant: "cover",
   },
   {
     index: "01",
     label: "ASSESS",
-    headline: "WE CHECK HOW YOU MOVE FIRST.",
+    headline: ["WE CHECK HOW", "YOU MOVE", "FIRST."],
     accentWords: ["MOVE"],
     sub: "Mobility, strength baseline, and anything that needs attention before loading up.",
+    variant: "standard",
   },
   {
     index: "02",
     label: "TRAIN & CORRECT",
-    headline: "EVERY REP GETS WATCHED.",
+    headline: ["EVERY REP GETS", "WATCHED."],
     accentWords: ["WATCHED"],
     sub: "Form corrected in real time — the part you can't fix training alone.",
+    variant: "standard",
   },
   {
     index: "03",
     label: "TRACK & ADJUST",
-    headline: "THE PLAN EVOLVES.",
+    headline: ["THE PLAN", "EVOLVES."],
     accentWords: ["EVOLVES"],
     sub: "Nothing stays fixed — your program adjusts as you get stronger.",
     cta: "DM OR WHATSAPP TO START.",
+    variant: "payoff",
   },
 ];
 
@@ -50,7 +58,7 @@ export const Reel: React.FC = () => {
             durationInFrames={SCENE_FRAMES[i]}
             name={`Scene ${scene.index}`}
           >
-            <Scene {...scene} />
+            <Scene {...scene} durationInFrames={SCENE_FRAMES[i]} />
           </Series.Sequence>
         ))}
       </Series>
