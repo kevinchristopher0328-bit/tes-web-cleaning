@@ -12,6 +12,9 @@ Config.setRspack(true);
 Config.setVideoImageFormat("jpeg");
 Config.setOverwriteOutput(true);
 Config.overrideBundlerConfig(enableTailwind);
+// Fonts + captions.json load via delayRender(); give them headroom under
+// render concurrency so a slow tab doesn't trip the default 30s timeout.
+Config.setDelayRenderTimeoutInMilliseconds(120000);
 
 // In sandboxes where Remotion can't download its own Chromium, point it at a
 // pre-installed headless shell via REMOTION_BROWSER_EXECUTABLE. Ignored when

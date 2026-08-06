@@ -33,8 +33,7 @@ export const COLORS = {
 
 // Consistent left margin so all four scenes align to one system.
 export const MARGIN = 96; // px from the left edge (safe area)
-export const FPS = 30;
 
-// Scene durations in frames (30fps). 4 + 4 + 4 + 5 = 17s.
-export const SCENE_FRAMES = [120, 120, 120, 150] as const;
-export const TOTAL_FRAMES = SCENE_FRAMES.reduce((a, b) => a + b, 0);
+// Scene timing is generated from the voiceover by scripts/align.mjs so the
+// on-screen headline for each scene is up while its line is being spoken.
+export { FPS, SCENE_FRAMES, TOTAL_FRAMES } from "./sceneTiming";

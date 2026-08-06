@@ -1,7 +1,8 @@
-import { AbsoluteFill, Series } from "remotion";
+import { AbsoluteFill, Audio, Series, staticFile } from "remotion";
 import { Scene, SceneProps } from "./Scene";
 import { Marquee } from "./Marquee";
 import { ProgressBar } from "./ProgressBar";
+import { Captions } from "./Captions";
 import { COLORS, SCENE_FRAMES } from "./theme";
 
 const SCENES: SceneProps[] = [
@@ -39,6 +40,9 @@ const SCENES: SceneProps[] = [
 export const Reel: React.FC = () => {
   return (
     <AbsoluteFill style={{ backgroundColor: COLORS.bg }}>
+      {/* Narration plays across the whole composition */}
+      <Audio src={staticFile("voiceover.mp3")} />
+
       <Series>
         {SCENES.map((scene, i) => (
           <Series.Sequence
@@ -53,6 +57,8 @@ export const Reel: React.FC = () => {
 
       {/* Global overlays span all scenes so the reel reads as one system */}
       <ProgressBar />
+      {/* Voice-synced TikTok captions, above the marquee */}
+      <Captions />
       <Marquee />
     </AbsoluteFill>
   );
