@@ -6,93 +6,109 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
-import { COLORS, FONT_DISPLAY, FONT_TEXT, MARGIN } from "./theme";
+import { measureText } from "@remotion/layout-utils";
+import { COLORS, FONT_DISPLAY, FONT_TEXT, HEIGHT, MARGIN } from "./theme";
 import { splitHeadline } from "./splitHeadline";
+import type { SceneSync } from "./sync";
 
-export type SceneVariant = "cover" | "standard" | "payoff";
+export type ScenePace = "cover" | "standard" | "payoff";
 
 export type SceneProps = {
   index: string; // "00", "01", ...
   label: string; // kicker, ALL-CAPS
-  headline: string[]; // ALL-CAPS, one entry per visual line (revealed line by line)
+  headline: string[]; // ALL-CAPS, one entry per visual line (rises out of the baseline)
+  accentWords: string[]; // headline words colored #fdd000
   sub: string; // sentence case, muted
-  accentWords: string[]; // words in headline to color accent
-  cta?: string; // optional CTA rendered as accent pill (Scene 4)
-  variant: SceneVariant; // per-scene motion feel
-  durationInFrames: number; // this scene's length, so the exit can land
+  cta?: string; // Scene 4 — solid pill
+  footer?: string; // Scene 3 — small tag under the sub
+  footerAccent?: string[]; // accent word within the footer
+  baselineY: number; // this scene's baseline position (shifts down across scenes)
+  pace: ScenePace; // motion feel
+  sync: SceneSync; // audio-derived frames (accent flash, cta land, exit)
+  durationInFrames: number;
 };
 
-// No linear easing anywhere — this is the movement curve, springs handle weight.
-const SHARP = Easing.out(Easing.cubic);
+const SHARP = Easing.out(Easing.cubic); // movement curve — no linear easing anywhere
 const clamp = { extrapolateLeft: "clamp", extrapolateRight: "clamp" } as const;
 
-// Per-variant choreography. Scene 1 is heavier (opener), Scene 4 snappiest (payoff).
-const VARIANTS: Record<
-  SceneVariant,
-  {
-    damping: number; // headline position spring
-    lineStagger: number; // frames between headline lines
-    lineLand: number; // frames after a line starts until it's "landed"
-    headStart: number; // frame the headline reveal begins
-    pushTo: number; // ambient push-in scale target
-    ctaPulse: boolean;
-  }
+const PACE: Record<
+  ScenePace,
+  { damping: number; stagger: number; headStart: number; lineLand: number; pushTo: number; subStart: number }
 > = {
-  cover: { damping: 11, lineStagger: 5, lineLand: 12, headStart: 8, pushTo: 1.05, ctaPulse: false },
-  standard: { damping: 14, lineStagger: 4, lineLand: 10, headStart: 6, pushTo: 1.04, ctaPulse: false },
-  payoff: { damping: 18, lineStagger: 3, lineLand: 8, headStart: 6, pushTo: 1.035, ctaPulse: true },
+  cover: { damping: 11, stagger: 5, headStart: 12, lineLand: 12, pushTo: 1.05, subStart: 34 },
+  standard: { damping: 14, stagger: 4, headStart: 8, lineLand: 10, pushTo: 1.04, subStart: 28 },
+  payoff: { damping: 18, stagger: 3, headStart: 7, lineLand: 8, pushTo: 1.035, subStart: 24 },
 };
 
-const EXIT_DUR = 8; // final frames: drift up + fade, carrying motion through the cut
-const MASK_DIST = 150; // px a line is pushed below its baseline before revealing
-const GLOW_PERIOD = 90; // frames for one glow breath
+const HEAD_SIZE = 150;
+const MASK_DIST = 170; // px a line is pushed below the baseline before it rises
+const TICK_H = 18; // measurement notch height
+
+// Find the first accent word across the headline lines (which line, and the
+// text before it) so the tick notch can be positioned under it.
+const findAccent = (lines: string[], accentWords: string[]) => {
+  for (let li = 0; li < lines.length; li++) {
+    const segs = splitHeadline(lines[li], accentWords);
+    let pre = "";
+    for (const s of segs) {
+      if (s.accent) return { lineIndex: li, preText: pre, accentText: s.text };
+      pre += s.text;
+    }
+  }
+  return null;
+};
 
 export const Scene: React.FC<SceneProps> = ({
   index,
   label,
   headline,
-  sub,
   accentWords,
+  sub,
   cta,
-  variant,
+  footer,
+  footerAccent = [],
+  baselineY,
+  pace,
+  sync,
   durationInFrames,
 }) => {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
-  const v = VARIANTS[variant];
+  const p = PACE[pace];
 
-  // --- Ambient push-in (always breathing) + exit drift/fade -------------------
-  const pushScale = interpolate(frame, [0, durationInFrames], [1, v.pushTo], {
+  // Ambient push-in + exit drift/fade (exit begins when the last word finishes).
+  const pushScale = interpolate(frame, [0, durationInFrames], [1, p.pushTo], {
     ...clamp,
     easing: Easing.inOut(Easing.sin),
   });
-  const exitStart = durationInFrames - EXIT_DUR;
-  const exitY = interpolate(frame, [exitStart, durationInFrames], [0, -20], {
-    ...clamp,
-    easing: SHARP,
-  });
-  const exitOpacity = interpolate(frame, [exitStart, durationInFrames], [1, 0], {
-    ...clamp,
-    easing: SHARP,
-  });
+  const exitY = interpolate(frame, [sync.exitStart, durationInFrames], [0, -20], { ...clamp, easing: SHARP });
+  const exitOpacity = interpolate(frame, [sync.exitStart, durationInFrames], [1, 0], { ...clamp, easing: SHARP });
 
-  // --- Faint accent glow behind the headline, pulsing on a slow sine ----------
-  const glowAlpha = interpolate(
-    Math.sin((frame / GLOW_PERIOD) * Math.PI * 2),
-    [-1, 1],
-    [0.04, 0.08],
-  );
+  // Headline accent: landing frame of its line, then the flash-pop on the spoken word.
+  const accent = findAccent(headline, accentWords);
+  const accentLandFrame = accent ? p.headStart + accent.lineIndex * p.stagger + p.lineLand : 0;
+  const accentFlash = Math.max(sync.accentFlash ?? accentLandFrame + 2, accentLandFrame + 1);
 
-  // --- Index + label (frames 0–8) ---------------------------------------------
+  // Tick notch x-position (centered under the accent word), measured from the font.
+  let tickX: number | null = null;
+  if (accent) {
+    const w = (t: string) =>
+      t.length === 0
+        ? 0
+        : measureText({ text: t, fontFamily: FONT_DISPLAY, fontSize: HEAD_SIZE, letterSpacing: "-1px", fontWeight: 400 })
+            .width;
+    tickX = MARGIN + w(accent.preText) + w(accent.accentText) / 2;
+  }
+  const tickScaleY = interpolate(frame, [accentFlash, accentFlash + 4], [0, 1], { ...clamp, easing: SHARP });
+
+  // Index slides along the baseline into place; label letter-spacing tightens.
   const idP = spring({ frame, fps, config: { damping: 14, overshootClamping: true } });
-  const indexX = interpolate(idP, [0, 1], [-30, 0]);
+  const indexX = interpolate(idP, [0, 1], [-40, 0]);
   const idFade = interpolate(frame, [0, 6], [0, 1], { ...clamp, easing: SHARP });
   const labelSpacing = interpolate(frame, [0, 8], [14, 5], { ...clamp, easing: SHARP });
-  const underline = interpolate(frame, [2, 10], [0, 1], { ...clamp, easing: SHARP });
 
-  // --- Sub line (frames 18–28) ------------------------------------------------
-  const subY = interpolate(frame, [18, 28], [12, 0], { ...clamp, easing: SHARP });
-  const subFade = interpolate(frame, [18, 28], [0, 1], { ...clamp, easing: SHARP });
+  const subFade = interpolate(frame, [p.subStart, p.subStart + 10], [0, 1], { ...clamp, easing: SHARP });
+  const subY = interpolate(frame, [p.subStart, p.subStart + 12], [12, 0], { ...clamp, easing: SHARP });
 
   return (
     <AbsoluteFill style={{ backgroundColor: COLORS.bg }}>
@@ -104,36 +120,100 @@ export const Scene: React.FC<SceneProps> = ({
           transformOrigin: "center center",
         }}
       >
-        {/* Pulsing accent glow behind the headline */}
-        <AbsoluteFill
-          style={{
-            background: `radial-gradient(62% 42% at 42% 52%, rgba(253,208,0,${glowAlpha}) 0%, rgba(253,208,0,0) 70%)`,
-          }}
-        />
-
+        {/* Headline — hangs off the baseline, each line rises up through it */}
         <div
           style={{
             position: "absolute",
-            top: 220,
-            bottom: 180,
             left: MARGIN,
+            bottom: HEIGHT - baselineY,
             right: MARGIN,
             display: "flex",
             flexDirection: "column",
-            justifyContent: "center",
             alignItems: "flex-start",
+            fontFamily: FONT_DISPLAY,
+            fontSize: HEAD_SIZE,
+            lineHeight: 0.92,
+            letterSpacing: -1,
+            textTransform: "uppercase",
+            color: COLORS.text,
           }}
         >
-          {/* Index marker + kicker label */}
+          {headline.map((line, li) => {
+            const revealStart = p.headStart + li * p.stagger;
+            const rp = spring({
+              frame: frame - revealStart,
+              fps,
+              config: { damping: p.damping, overshootClamping: true },
+            });
+            const ty = interpolate(rp, [0, 1], [MASK_DIST, 0]);
+            const segments = splitHeadline(line, accentWords);
+
+            return (
+              <div key={li} style={{ overflow: "hidden" }}>
+                <div style={{ translate: `0 ${ty}px`, willChange: "transform" }}>
+                  {segments.map((seg, si) => {
+                    if (!seg.accent) {
+                      return (
+                        <span key={si} style={{ color: COLORS.text }}>
+                          {seg.text}
+                        </span>
+                      );
+                    }
+                    // Accent word: 1-frame flash-pop (near-white) then locks to yellow.
+                    const lit = frame >= accentFlash;
+                    const pop = frame === accentFlash;
+                    const ap = spring({ frame: frame - accentFlash, fps, config: { damping: 12 } });
+                    const aScale = frame < accentFlash ? 1 : interpolate(ap, [0, 1], [1.06, 1]);
+                    return (
+                      <span
+                        key={si}
+                        style={{
+                          display: "inline-block",
+                          transformOrigin: "left center",
+                          scale: String(aScale),
+                          color: pop ? COLORS.white : lit ? COLORS.accent : COLORS.text,
+                        }}
+                      >
+                        {seg.text}
+                      </span>
+                    );
+                  })}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+
+        {/* Measurement tick rising from the baseline under the accent word */}
+        {tickX !== null ? (
           <div
             style={{
-              display: "flex",
-              alignItems: "baseline",
-              gap: 22,
-              marginBottom: 40,
-              opacity: idFade,
+              position: "absolute",
+              left: tickX - 1.5,
+              top: baselineY - TICK_H,
+              width: 3,
+              height: TICK_H,
+              backgroundColor: COLORS.accent,
+              transformOrigin: "bottom center",
+              scale: `1 ${tickScaleY}`,
             }}
-          >
+          />
+        ) : null}
+
+        {/* Lower cluster: index + label, sub, footer/CTA — hung under the baseline */}
+        <div
+          style={{
+            position: "absolute",
+            left: MARGIN,
+            top: baselineY + 22,
+            right: MARGIN,
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "flex-start",
+            gap: 18,
+          }}
+        >
+          <div style={{ display: "flex", alignItems: "baseline", gap: 22, opacity: idFade }}>
             <span
               style={{
                 fontFamily: FONT_DISPLAY,
@@ -145,101 +225,23 @@ export const Scene: React.FC<SceneProps> = ({
             >
               {index}
             </span>
-            <span style={{ position: "relative", display: "inline-block" }}>
-              <span
-                style={{
-                  fontFamily: FONT_TEXT,
-                  fontWeight: 600,
-                  fontSize: 28,
-                  letterSpacing: labelSpacing,
-                  textTransform: "uppercase",
-                  color: COLORS.text,
-                }}
-              >
-                {label}
-              </span>
-              {/* 2px accent underline wiping left-to-right */}
-              <span
-                style={{
-                  position: "absolute",
-                  left: 0,
-                  right: 0,
-                  bottom: -8,
-                  height: 2,
-                  backgroundColor: COLORS.accent,
-                  scale: `${underline} 1`,
-                  transformOrigin: "left center",
-                }}
-              />
+            <span
+              style={{
+                fontFamily: FONT_TEXT,
+                fontWeight: 600,
+                fontSize: 28,
+                letterSpacing: labelSpacing,
+                textTransform: "uppercase",
+                color: COLORS.text,
+              }}
+            >
+              {label}
             </span>
           </div>
 
-          {/* Headline — line-by-line mask reveal, the hero move */}
-          <h1
-            style={{
-              margin: 0,
-              fontFamily: FONT_DISPLAY,
-              fontSize: 150,
-              lineHeight: 0.92,
-              letterSpacing: -1,
-              textTransform: "uppercase",
-              color: COLORS.text,
-            }}
-          >
-            {headline.map((line, li) => {
-              const revealStart = v.headStart + li * v.lineStagger;
-              const p = spring({
-                frame: frame - revealStart,
-                fps,
-                config: { damping: v.damping, overshootClamping: true },
-              });
-              const ty = interpolate(p, [0, 1], [MASK_DIST, 0]);
-              const landFrame = revealStart + v.lineLand;
-              const segments = splitHeadline(line, accentWords);
-
-              return (
-                <div key={li} style={{ overflow: "hidden" }}>
-                  <div style={{ translate: `0 ${ty}px`, willChange: "transform" }}>
-                    {segments.map((seg, si) => {
-                      if (!seg.accent) {
-                        return (
-                          <span key={si} style={{ color: COLORS.text }}>
-                            {seg.text}
-                          </span>
-                        );
-                      }
-                      // Accent word: scale settle (sprung) + 1-frame color flick.
-                      const ap = spring({
-                        frame: frame - landFrame,
-                        fps,
-                        config: { damping: 12 },
-                      });
-                      const aScale = interpolate(ap, [0, 1], [1.04, 1]);
-                      const lit = frame >= landFrame + 1;
-                      return (
-                        <span
-                          key={si}
-                          style={{
-                            display: "inline-block",
-                            transformOrigin: "left center",
-                            scale: String(aScale),
-                            color: lit ? COLORS.accent : COLORS.text,
-                          }}
-                        >
-                          {seg.text}
-                        </span>
-                      );
-                    })}
-                  </div>
-                </div>
-              );
-            })}
-          </h1>
-
-          {/* Supporting line */}
           <p
             style={{
-              margin: "44px 0 0 0",
+              margin: 0,
               maxWidth: 760,
               fontFamily: FONT_TEXT,
               fontWeight: 400,
@@ -253,43 +255,74 @@ export const Scene: React.FC<SceneProps> = ({
             {sub}
           </p>
 
-          {/* CTA pill (Scene 4) */}
-          {cta ? <CtaPill cta={cta} pulse={v.ctaPulse} /> : null}
+          {footer ? (
+            <Footer text={footer} accentWords={footerAccent} flash={sync.footerFlash} subStart={p.subStart} />
+          ) : null}
+
+          {cta ? <CtaPill cta={cta} land={sync.ctaLand} /> : null}
         </div>
       </AbsoluteFill>
     </AbsoluteFill>
   );
 };
 
-// CTA — springs up from 0.9, then (payoff) a single subtle pulse after it lands.
-const CTA_START = 22;
-const CTA_LAND = 10;
-
-const CtaPill: React.FC<{ cta: string; pulse: boolean }> = ({ cta, pulse }) => {
+// Small footer tag (Scene 3) with its own accent flash-pop.
+const Footer: React.FC<{ text: string; accentWords: string[]; flash: number | null; subStart: number }> = ({
+  text,
+  accentWords,
+  flash,
+  subStart,
+}) => {
   const frame = useCurrentFrame();
-  const { fps } = useVideoConfig();
-
-  const p = spring({ frame: frame - CTA_START, fps, config: { damping: 14 } });
-  const baseScale = interpolate(p, [0, 1], [0.9, 1]);
-  const opacity = interpolate(frame, [CTA_START, CTA_START + 8], [0, 1], {
-    ...clamp,
-    easing: SHARP,
-  });
-
-  // Single 1.0 → 1.03 → 1.0 pulse after landing.
-  const pulseStart = CTA_START + CTA_LAND;
-  const pulseT = interpolate(frame, [pulseStart, pulseStart + 8], [0, 1], { ...clamp });
-  const pulseScale = pulse ? 1 + 0.03 * Math.sin(Math.PI * pulseT) : 1;
+  const appear = subStart + 14;
+  const opacity = interpolate(frame, [appear, appear + 10], [0, 1], { ...clamp, easing: SHARP });
+  const y = interpolate(frame, [appear, appear + 12], [10, 0], { ...clamp, easing: SHARP });
+  const flashAt = Math.max(flash ?? appear + 6, appear + 6);
+  const segs = splitHeadline(text, accentWords);
 
   return (
     <div
       style={{
-        marginTop: 60,
+        marginTop: 8,
         opacity,
-        scale: String(baseScale * pulseScale),
-        transformOrigin: "left center",
+        translate: `0 ${y}px`,
+        fontFamily: FONT_DISPLAY,
+        fontSize: 46,
+        letterSpacing: 0.5,
+        textTransform: "uppercase",
+        color: COLORS.text,
       }}
     >
+      {segs.map((s, i) => {
+        if (!s.accent) return <span key={i}>{s.text}</span>;
+        const lit = frame >= flashAt;
+        const pop = frame === flashAt;
+        return (
+          <span key={i} style={{ color: pop ? COLORS.white : lit ? COLORS.accent : COLORS.text }}>
+            {s.text}
+          </span>
+        );
+      })}
+    </div>
+  );
+};
+
+// CTA — lands with a spring as the narrator says it, then one subtle pulse.
+const CtaPill: React.FC<{ cta: string; land: number | null }> = ({ cta, land }) => {
+  const frame = useCurrentFrame();
+  const { fps } = useVideoConfig();
+  const at = land ?? 24;
+
+  const sp = spring({ frame: frame - at, fps, config: { damping: 14 } });
+  const baseScale = interpolate(sp, [0, 1], [0.9, 1]);
+  const opacity = interpolate(frame, [at, at + 8], [0, 1], { ...clamp, easing: SHARP });
+
+  const pulseStart = at + 12;
+  const pulseT = interpolate(frame, [pulseStart, pulseStart + 8], [0, 1], { ...clamp });
+  const pulseScale = 1 + 0.03 * Math.sin(Math.PI * pulseT);
+
+  return (
+    <div style={{ marginTop: 12, opacity, scale: String(baseScale * pulseScale), transformOrigin: "left center" }}>
       <span
         style={{
           display: "inline-block",

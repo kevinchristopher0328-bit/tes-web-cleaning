@@ -1,13 +1,16 @@
 import { AbsoluteFill, Audio, Series, staticFile } from "remotion";
-import { Scene, SceneProps } from "./Scene";
+import { Scene, type ScenePace, type SceneProps } from "./Scene";
+import { Baseline } from "./Baseline";
 import { Marquee } from "./Marquee";
-import { ProgressBar } from "./ProgressBar";
-import { Captions } from "./Captions";
-import { COLORS, SCENE_FRAMES } from "./theme";
+import { Grain } from "./Grain";
+import { COLORS } from "./theme";
+import { SCENE_SYNC } from "./sync";
 
-// headline is split into explicit visual lines (matching the natural wrap) so
-// each line can be revealed on its own stagger. variant tunes the motion feel.
-type SceneData = Omit<SceneProps, "durationInFrames">;
+// baselineY shifts down the frame across scenes so the eye travels down the reel.
+const BASELINE_Y = [740, 880, 1010, 1180];
+const PACE: ScenePace[] = ["cover", "standard", "standard", "payoff"];
+
+type SceneData = Omit<SceneProps, "baselineY" | "pace" | "sync" | "durationInFrames">;
 
 const SCENES: SceneData[] = [
   {
@@ -16,15 +19,13 @@ const SCENES: SceneData[] = [
     headline: ["NOT JUST", "SHOWING UP."],
     accentWords: ["SHOWING UP"],
     sub: "Here's what a real session actually looks like.",
-    variant: "cover",
   },
   {
     index: "01",
     label: "ASSESS",
     headline: ["WE CHECK HOW", "YOU MOVE", "FIRST."],
     accentWords: ["MOVE"],
-    sub: "Mobility, strength baseline, and anything that needs attention before loading up.",
-    variant: "standard",
+    sub: "Mobility, strength, and anything that needs attention before loading up.",
   },
   {
     index: "02",
@@ -32,7 +33,8 @@ const SCENES: SceneData[] = [
     headline: ["EVERY REP GETS", "WATCHED."],
     accentWords: ["WATCHED"],
     sub: "Form corrected in real time — the part you can't fix training alone.",
-    variant: "standard",
+    footer: "JUST COUNTED.",
+    footerAccent: ["COUNTED"],
   },
   {
     index: "03",
@@ -41,9 +43,10 @@ const SCENES: SceneData[] = [
     accentWords: ["EVOLVES"],
     sub: "Nothing stays fixed — your program adjusts as you get stronger.",
     cta: "DM OR WHATSAPP TO START.",
-    variant: "payoff",
   },
 ];
+
+const DURATIONS = SCENE_SYNC.map((s) => s.durationInFrames);
 
 export const Reel: React.FC = () => {
   return (
@@ -53,21 +56,23 @@ export const Reel: React.FC = () => {
 
       <Series>
         {SCENES.map((scene, i) => (
-          <Series.Sequence
-            key={scene.index}
-            durationInFrames={SCENE_FRAMES[i]}
-            name={`Scene ${scene.index}`}
-          >
-            <Scene {...scene} durationInFrames={SCENE_FRAMES[i]} />
+          <Series.Sequence key={scene.index} durationInFrames={DURATIONS[i]} name={`Scene ${scene.index}`}>
+            <Scene
+              {...scene}
+              baselineY={BASELINE_Y[i]}
+              pace={PACE[i]}
+              sync={SCENE_SYNC[i]}
+              durationInFrames={DURATIONS[i]}
+            />
           </Series.Sequence>
         ))}
       </Series>
 
-      {/* Global overlays span all scenes so the reel reads as one system */}
-      <ProgressBar />
-      {/* Voice-synced TikTok captions, above the marquee */}
-      <Captions />
+      {/* One continuous baseline connecting all four scenes */}
+      <Baseline baselineYs={BASELINE_Y} durations={DURATIONS} />
+      {/* Signature marquee + film grain over the whole comp */}
       <Marquee />
+      <Grain />
     </AbsoluteFill>
   );
 };
